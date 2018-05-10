@@ -1,0 +1,4 @@
+syntax: glob
+Devilguard/bin/
+Devilguard/obj/
+.vs
