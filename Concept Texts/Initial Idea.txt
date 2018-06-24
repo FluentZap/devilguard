@@ -1,0 +1,100 @@
+Devilguard
+The game simulates starting from scratch and building a lair.
+
+You start and make a villain
+Human basic.
+Supreme Villainy
+
+Starts with a basic pack containing
+	Rations
+	Gold
+	A few basic resources
+	
+	
+There is a main helper that gets you started building a base. Walk through helper.
+
+
+Pass the main cave and enter the Dungeon.
+There are a few commoners to fight.
+Combat intro.
+
+
+
+The dungeon will start with a few spaces cleared.
+Can build your own/use the rooms to build a barracks.
+
+
+Build rooms as tiles.
+Multiple rooms next to each other will chain/link and give more output.
+Unlock higher level of the rooms and upgrade them.
+
+
+Rooms
+	Barracks
+	Armory
+	
+Can build equipment chests.
+They get equipped and 
+
+	
+	
+Resources
+	Outside
+		Timber Farm
+		Charcoal Burner
+		Glass Maker
+		Mine		
+
+		
+Resource supply demand system.
+
+Barracks
+	Minions +5
+	Food -5/day
+
+Orchard
+	Minions -2
+	Food	+50/day
+	Wood	+10/day
+	
+Farm
+	Minions -2
+	Food	+50/day
+	Straw	+10/day
+
+
+
+Units are controlled and can be used for combat
+
+You start as a human with 3 followers
+3xCommoners
+	Build and haul things
+	
+How does progression work.
+
+Missions unlock progression
+Prestige/Infamy					increases with many different things
+Tech research unlocks stuff
+Build build tree
+Based on player classes
+Build knowledge to unlock on a tree
+
+
+
+
+There is a world gen and you choose a spot to start.
+Many locations on the map to place things.
+
+Once there it gives you a local map and you can start building a base.
+
+The base has a dungeon side and a base side.
+Can also build a castle/mansion level later.
+
+The dungeon side is a cave.
+
+
+
+
+
+
+Possible Raid Levels to attack towns and strongholds.
