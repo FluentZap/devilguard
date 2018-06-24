@@ -1,0 +1,100 @@
+You have been forced to delve into the dark magic to avenge.
+
+You have taken an arcane scroll
+
+At the game start you choose your starting
+
+Name
+Gender
+Race	Unlock-able?
+Class	Starting class	Akin to FFT
+
+
+Skills?
+
+You pick a point on a random gen world.
+Can have mountain on any side/corner or center or none.
+
+
+When you start you can chop down trees.
+
+You can craft a workpost and wooden tools. Allows you to dig into the mountain and gather dirt/stone.
+
+When using a throne goes into a top down strategy view
+workposts are area control markers, They give line of sight and allow building in the area.
+
+Chests
+Wood-PickAxe
+Wood-Axe
+Wood-Shovel
+Wood-Club
+
+
+
+
+
+A storehouse that is build has access to all the chests in it.
+
+Can choose to follow three quest lines to start.
+
+The quest lines unlock new classes/races that Henchmen can switch to.
+Also let's the player hire other types of minions/change old minion types.
+
+
+
+Find a group of no goods to hire and start building a base of operations.
+The living mean nothing to me, I will find a way to uncover the hidden secrets of death.
+I have lost all hope, i will make a pact with dark powers to achieve my goal.
+
+
+
+
+
+
+When building rooms must fulfill all the requirements and then the room will become the selected type.
+
+Forge
+Library
+Barracks
+Sleeping quarters
+Kitchen
+Storehouse
+Greenhouse
+Throne Room
+
+
+On top level can build buildings and add roofs.
+Can build stairs to dig down levels.
+
+
+Wealth determines value of room, also value of kingdom.
+*It is offset by the strength of your forces.
+*If the town is attacked, knowledge will be updated.
+
+
+
+
+
+Population
+Workers in town
+
+
+
+
+
+World map
+
+Kingdoms
+	Can be enslaved
+	Taken over by outside forces
+	Rebel
+	Attack and be attacked
+Towns
+Tribes
+Companies
+Outposts
+Resources Points
+Shrines
+Temples
+Places of Power
+Places controlled by Powerful creatures

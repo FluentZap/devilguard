@@ -1,0 +1,64 @@
+Game Flow
+
+
+
+At the game start you choose your starting
+
+Name
+Gender
+Race	Unlock-able?
+Class	Starting class	Akin to FFT
+
+
+You pick a point on a random gen world.
+Can have mountain on any side/corner or center or none.
+
+
+When you start you can hit trees and rock to get basic resources.
+You can then make Stone tools
+
+
+When using a throne goes into a top down strategy view
+Workposts are area control markers, They give line of sight and allow building in the area.
+
+Chests
+Wood-PickAxe
+Wood-Axe
+Wood-Shovel
+Wood-Hoe
+Wood-Sickle
+Wood-Club
+
+
+Player makes tools and a club or bow
+There will be a few creatures that attack when the player does.
+
+FFT style combat on the map.
+Starts when one side sees another. Then the fog goes away and the teams fight.
+
+Fight and kill Creatures
+
+Build a Throne Room
+
+Will only let the player build rooms in enclosed buildings.
+
+
+
+Walls and doors are destructible.
+
+A storehouse that is build has access to all the chests in it.
+
+Can choose to follow three quest lines to start.
+
+The quest lines unlock new classes/races that Henchmen can switch to.
+Also let's the player hire other types of minions/change old minion types.
+
+
+
+Find a group of no goods to hire and start building a base of operations.
+The living mean nothing to me, I will find a way to uncover the hidden secrets of death.
+I have lost all hope, i will make a pact with dark powers to achieve my goal.
+
+
+
+
