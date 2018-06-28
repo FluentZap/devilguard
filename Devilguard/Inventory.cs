@@ -7,135 +7,37 @@ using System.Threading.Tasks;
 namespace Devilguard
 {
 
-    enum ResourceItem
+    enum EquipmentType
     {
-        Wood,
-        Stone,
-        Iron,
-        Dirt
-    };
-
-    enum InventoryItems:int
-    {
-        WoodChest,
-        WoodPickAxe,
-        WoodAxe,
-        WoodShovel,
-        WoodHoe,
-        WoodSickle,
-        WoodClub,
-        WoodBow
-    };
-
-
-    enum MineHardness : byte
-    {
-        Stone,
-        Iron,
-    };
-
-
-    class TileDictionary
-    {        
-        public int Sprite;
-        public bool Walkalble;        
-        public int Durability;        
-        public int Drops;
-        public MineHardness Hardness;
+        WeaponLH,
+        WeaponRH,
+        WeaponDW,
+        Shield,
+        Headpiece,
+        Armor,
+        Accessory1,
+        Accessory2,
+        Tool,
+        Wand
     }
 
 
-    class ResourceDictionaryEntry
+    class InventoryEntry
     {
-        public string Name;
-        public int Value;
-        public int Weight;
+        public InventoryItem item;
+        public int Amount;
 
-        public ResourceDictionaryEntry(String name, int value, int weight)
+        public InventoryEntry(InventoryItem i)
         {
-            Name = name;
-            Value = value;
-            Weight = weight;
+            item = i;
         }
-
-    }
-
-    class ResourceDictionary
-    {
-        public Dictionary<ResourceItem, ResourceDictionaryEntry> Data = new Dictionary<ResourceItem, ResourceDictionaryEntry>();
-        public ResourceDictionary()
-        {
-            Data.Add(ResourceItem.Wood, new ResourceDictionaryEntry("Wood", 3, 2));
-            Data.Add(ResourceItem.Stone, new ResourceDictionaryEntry("Stone", 5, 5));
-            Data.Add(ResourceItem.Iron, new ResourceDictionaryEntry("Iron", 20, 10));
-            Data.Add(ResourceItem.Dirt, new ResourceDictionaryEntry("Dirt", 0, 5));
-        }
-    }
-
-
-
-    class CraftingDictinaryEntry
-    {
-        public Dictionary<ResourceItem, int> ResourceCost = new Dictionary<ResourceItem, int>();
-        public string Name;
-        public int Value;
-        public int Weight;
-        
-        public CraftingDictinaryEntry(String name, int value, int weight, ResourceItem r1, int c1)
-        {            
-            Name = name;
-            Value = value;
-            Weight = weight;
-            ResourceCost.Add(r1, c1);
-        }
-
-        public CraftingDictinaryEntry(String name, int value, int weight, ResourceItem r1, int c1, ResourceItem r2, int c2)
-        {
-            Name = name;
-            Value = value;
-            Weight = weight;
-            ResourceCost.Add(r1, c1);
-            ResourceCost.Add(r2, c2);
-        }
-
-        public CraftingDictinaryEntry(String name, int value, int weight, ResourceItem r1, int c1, ResourceItem r2, int c2, ResourceItem r3, int c3)
-        {
-            Name = name;
-            Value = value;
-            Weight = weight;
-            ResourceCost.Add(r1, c1);
-            ResourceCost.Add(r2, c2);
-            ResourceCost.Add(r3, c3);
-        }
-
-
-
-    }
-    
-    class CraftingDictionary
-    {
-        public Dictionary<InventoryItems, CraftingDictinaryEntry> Data = new Dictionary<InventoryItems, CraftingDictinaryEntry>();
-        public CraftingDictionary()
-        {
-            Data.Add(InventoryItems.WoodChest, new CraftingDictinaryEntry("Wooden Chest", 10, 50, ResourceItem.Wood, 40));
-            Data.Add(InventoryItems.WoodPickAxe, new CraftingDictinaryEntry("Wooden Axe", 10, 10, ResourceItem.Wood, 10, ResourceItem.Stone, 5));
-            Data.Add(InventoryItems.WoodAxe, new CraftingDictinaryEntry("Wooden Axe", 10, 10, ResourceItem.Wood, 10, ResourceItem.Stone, 5));
-            Data.Add(InventoryItems.WoodShovel, new CraftingDictinaryEntry("Wooden Shovel", 10, 10, ResourceItem.Wood, 10, ResourceItem.Stone, 5));
-            Data.Add(InventoryItems.WoodHoe, new CraftingDictinaryEntry("Wooden Hoe", 10, 10, ResourceItem.Wood, 40, ResourceItem.Stone, 5));
-            Data.Add(InventoryItems.WoodSickle, new CraftingDictinaryEntry("Wooden Sickel", 10, 10, ResourceItem.Wood, 40, ResourceItem.Stone, 5));
-            Data.Add(InventoryItems.WoodClub, new CraftingDictinaryEntry("Wooden Club", 15, 15, ResourceItem.Wood, 40));
-            Data.Add(InventoryItems.WoodBow, new CraftingDictinaryEntry("Wooden Bow", 20, 10, ResourceItem.Wood, 60));            
-        }
-    }
-
-
-
+    }    
 
     class Inventory
     {
         public SortedDictionary<ResourceItem, int> Resources = new SortedDictionary<ResourceItem, int>();
-        public SortedDictionary<InventoryItems, int> Items = new SortedDictionary<InventoryItems, int>();
-
+        public SortedDictionary<int, InventoryEntry> Items = new SortedDictionary<int, InventoryEntry>();
+        public int InventorySize = 24;
 
         //Resources
         public void AddResource(ResourceItem i, int amount)
@@ -167,29 +69,30 @@ namespace Devilguard
 
 
         //Items
-        public void AddItem(InventoryItems i, int amount)
+        public bool AddItem(InventoryEntry i)
         {
-            if (Items.ContainsKey(i))
-                Items[i] += amount;
-            else
-                Items.Add(i, amount);
+            for (int x = 0; x < InventorySize; x++)
+            {
+                if (!Items.ContainsKey(x))
+                {
+                    Items.Add(x, i);
+                    return true;                    
+                }
+            }
+            return false;
         }
 
-        public void RemoveItem(InventoryItems i, int amount)
+        public void RemoveItem(int i)
         {
             if (Items.ContainsKey(i))
-            {
-                Items[i] -= amount;
-                if (Items[i] <= 0)
-                    Items.Remove(i);
-            }
+                Items.Remove(i);
         }
-        public int ItemCount(InventoryItems i)
+
+        public InventoryEntry GetItem(int i)
         {
             if (Items.ContainsKey(i))
                 return Items[i];
-            else
-                return 0;
+            return null;
         }
 
     }
@@ -202,21 +105,21 @@ namespace Devilguard
 
     class CraftCatalog
     {
-        public SortedSet<InventoryItems> Blueprints = new SortedSet<InventoryItems>();
+        public SortedSet<InventoryItem> Blueprints = new SortedSet<InventoryItem>();
 
-        public void AddBlueprint(InventoryItems i)
+        public void AddBlueprint(InventoryItem i)
         {
             if (!Blueprints.Contains(i))
                 Blueprints.Add(i);
         }
 
-        public void RemoveBlueprint(InventoryItems i)
+        public void RemoveBlueprint(InventoryItem i)
         {
             if (Blueprints.Contains(i))
                 Blueprints.Remove(i);
         }
 
-        public bool InCatalog(InventoryItems i)
+        public bool InCatalog(InventoryItem i)
         {
             if (Blueprints.Contains(i))
                 return true;
