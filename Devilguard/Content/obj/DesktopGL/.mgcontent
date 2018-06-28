@@ -4,13 +4,13 @@
   <Platform>DesktopGL</Platform>
   <Config />
   <SourceFiles>
-    <File>C:/Users/Toad/source/repos/Devilguard/Devilguard/Content/RockTile.png</File>
-    <File>C:/Users/Toad/source/repos/Devilguard/Devilguard/Content/GrassTile.png</File>
     <File>C:/Users/Toad/source/repos/Devilguard/Devilguard/Content/King_0.png</File>
     <File>C:/Users/Toad/source/repos/Devilguard/Devilguard/Content/Tree.png</File>
     <File>C:/Users/Toad/source/repos/Devilguard/Devilguard/Content/UI_Back.png</File>
     <File>C:/Users/Toad/source/repos/Devilguard/Devilguard/Content/UI_Button.png</File>
     <File>C:/Users/Toad/source/repos/Devilguard/Devilguard/Content/BasicFont.spritefont</File>
     <File>C:/Users/Toad/source/repos/Devilguard/Devilguard/Content/UI_Resources.png</File>
+    <File>C:/Users/Toad/source/repos/Devilguard/Devilguard/Content/BackTileMap.png</File>
+    <File>C:/Users/Toad/source/repos/Devilguard/Devilguard/Content/UI_Items.png</File>
   </SourceFiles>
 </SourceFileCollection>

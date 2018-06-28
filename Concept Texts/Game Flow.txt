@@ -61,4 +61,38 @@ I have lost all hope, i will make a pact with dark powers to achieve my goal.
 
 
 
+Setup Trade Routs and caravans
+Nodes to gain knowlage
 
+
+Resources are separate from inventory items.
+
+Build mine shaft on the lowest layer.
+Resource storage is capped until a storehouse is built.
+
+
+Storage has two inventories
+Items and resources
+
+
+
+
+Combat Items
+
+Held Items
+	Weapon
+		1H
+		2H
+		Duel wield
+	Shield
+Headpiece
+Armor
+Accessory
+
+
+
+
+Tools
+
+Tools
+Wands
