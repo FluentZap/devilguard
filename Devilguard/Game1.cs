@@ -45,7 +45,7 @@ namespace Devilguard
         Tile_Type[,] tilemap = new Tile_Type[1000, 1000];
         Point Screen_Scroll;
         float Screen_Zoom;
-        Point Screen_Size;
+        public Point Screen_Size;
         Point MouseDragStart;
         bool MouseDraging;
         private Camera2D _camera;
@@ -54,6 +54,8 @@ namespace Devilguard
 
         CraftingDictionary craftingDictionary = new CraftingDictionary();
         ResourceDictionary resourceDictionary = new ResourceDictionary();
+
+        GUI gui;
 
         Actor_Type Player = new Actor_Type();        
         enum Direction { LEFT, RIGHT, UP, DOWN };
@@ -159,12 +161,13 @@ namespace Devilguard
             //Player.inventory.AddItem(Item.Stone, 30);
             //Player.inventory.AddItem(Item.Iron, 30);
 
+            Player.inventory.AddItem( InventoryItems.WoodClub, 1);
 
             for (int x = 0; x < Enum.GetNames(typeof(InventoryItems)).Length; x++)
                 Player.CraftingBlueprints.AddBlueprint((InventoryItems)x);
-            
 
 
+            gui = new GUI(Screen_Size);
             base.Initialize();
             Window.IsBorderless = true;
             this.IsMouseVisible = true;
@@ -308,7 +311,9 @@ namespace Devilguard
             if (Mouse.GetState().LeftButton == ButtonState.Released)
                 Player.UsedItem = false;
 
-            if (Screen_Scroll.X < 0) Screen_Scroll.X = 0;
+            UI_CheckInventory();
+            
+                if (Screen_Scroll.X < 0) Screen_Scroll.X = 0;
             if (Screen_Scroll.X > GetATSI() * 1000 + Screen_Size.X) Screen_Scroll.X = GetATSI() * 1000 + Screen_Size.X;
 
             if (Screen_Scroll.Y < 0) Screen_Scroll.Y = 0;
@@ -317,6 +322,51 @@ namespace Devilguard
 
             base.Update(gameTime);
         }
+
+
+
+        void UI_CheckInventory()
+        {
+            Point pos = Mouse.GetState().Position;
+
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed)
+            {
+                foreach(var item in gui.InventoryElements)
+                {
+                    if (item.Value.Location.Contains(pos))
+                    {
+                        if (item.Key >= 2000 && item.Key < 3000)
+                        {
+                            int x = 0;
+                            foreach (var bp in Player.CraftingBlueprints.Blueprints)
+                            {                                                                
+                                if (x == item.Key - 2000)
+                                {
+                                    bool CanCaft = true;
+                                    foreach (var craftitem in craftingDictionary.Data[bp].ResourceCost)
+                                        if (Player.inventory.ResourceCount(craftitem.Key) < craftitem.Value)
+                                        { CanCaft = false; break; }
+
+                                    if (CanCaft)
+                                    {
+                                        foreach (var craftitem in craftingDictionary.Data[bp].ResourceCost)
+                                            Player.inventory.RemoveResource(craftitem.Key, craftitem.Value);
+                                        Player.inventory.AddItem(bp, 1);
+                                    }
+                                    break;
+                                }
+                                
+                                x++;
+                            }
+                                
+                        }
+                    }
+                }
+            }
+
+        }
+
+
 
         /// <summary>
         /// This is called when the game should draw itself.
@@ -372,40 +422,53 @@ namespace Devilguard
         }
 
 
-
-
-
         void DrawInventory()
         {
-            Point p = new Point(Screen_Size.X / 2 - 392, Screen_Size.Y / 2 - 196);
-            spriteBatch.Draw(UI_Textures[0], new Rectangle(p.X, p.Y, 392, 392), Color.White);
-            spriteBatch.Draw(UI_Textures[0], new Rectangle(p.X + 392, p.Y, 392, 392), Color.White);
+            Point p = new Point(Screen_Size.X / 2 - 274, Screen_Size.Y / 2 - 212);
+
+            foreach (var item in gui.InventoryElements)
+                if (item.Value.Enabled)
+                    if (item.Value.Sprite != SD_UI.None)
+                        spriteBatch.Draw(UI_Textures[(int)item.Value.Sprite], item.Value.Location, item.Value.color);
 
             int width = 6;
             int xpos = 0;
             int ypos = 0;
-            
+            //Draw Resources
             foreach (var item in Player.inventory.Resources)
-            {                
-                spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), Color.White);
-                spriteBatch.Draw(UI_Textures[(int)SD_UI.Resources], new Rectangle(p.X + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), new Rectangle((int)item.Key * 16, 0, 16, 16), Color.White);
+            {
+                spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), Color.White);
+                spriteBatch.Draw(UI_Textures[(int)SD_UI.Resources], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item.Key * 16, 0, 16, 16), Color.White);
+                spriteBatch.DrawString(basicfont, item.Value.ToString(), new Vector2(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos), Color.White);                
 
-                spriteBatch.DrawString(basicfont, item.Value.ToString(), new Vector2(p.X + 55 + 42 * xpos, p.Y + 82 + 42 * ypos), Color.White);                
-
-                spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Value * item.Value).ToString() + "gp", new Vector2(p.X + 55 + 42 * xpos, p.Y + 114 + 42 * ypos), Color.White);
-
-                spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Weight * item.Value).ToString() + "wt", new Vector2(p.X + 55 + 42 * xpos, p.Y + 146 + 42 * ypos), Color.White);
-
+                //spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Value * item.Value).ToString() + "gp", new Vector2(p.X + 55 + 42 * xpos, p.Y + 114 + 42 * ypos), Color.White);
+                //spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Weight * item.Value).ToString() + "wt", new Vector2(p.X + 55 + 42 * xpos, p.Y + 146 + 42 * ypos), Color.White);
                 xpos++;
                 if (xpos >= width)
-                { xpos = 0; ypos++; }                
+                { xpos = 0; ypos++; }
+            }
+
+            xpos = 0;
+            ypos = 4;
+            //Draw Items
+            foreach (var item in Player.inventory.Items)
+            {
+                spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), Color.White);
+                spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item.Key * 16, 0, 16, 16), Color.White);
+                spriteBatch.DrawString(basicfont, item.Value.ToString(), new Vector2(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos), Color.White);
+
+                //spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Value * item.Value).ToString() + "gp", new Vector2(p.X + 55 + 42 * xpos, p.Y + 114 + 42 * ypos), Color.White);
+                //spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Weight * item.Value).ToString() + "wt", new Vector2(p.X + 55 + 42 * xpos, p.Y + 146 + 42 * ypos), Color.White);
+                xpos++;
+                if (xpos >= width)
+                { xpos = 0; ypos++; }
             }
 
             width = 6;
             xpos = 0;
-            ypos = 0;                        
+            ypos = 0;
 
-            
+            p.X += 274;
             //Draw Crafting Area
             foreach (var item in Player.CraftingBlueprints.Blueprints)
             {                
@@ -416,13 +479,13 @@ namespace Devilguard
 
                 if (CanCaft)
                 {
-                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 392 + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), Color.White);
-                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 392 + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), new Rectangle((int)item * 16, 0, 16, 16), Color.White);
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), Color.White);
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item * 16, 0, 16, 16), Color.White);
                 }
                 else
                 {
-                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 392 + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), Color.Gray);
-                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 392 + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), new Rectangle((int)item * 16, 0, 16, 16), Color.Gray);
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), Color.Gray);
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item * 16, 0, 16, 16), Color.Gray);
                 }
                 
                 //spriteBatch.DrawString(basicfont, item.Value.ToString(), new Vector2(p.X + 55 + 42 * xpos, p.Y + 82 + 42 * ypos), Color.White);

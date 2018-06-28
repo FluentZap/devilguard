@@ -7,15 +7,6 @@ using System.Threading.Tasks;
 namespace Devilguard
 {
 
-    enum SD_UI:int
-    {
-        Back,
-        Button,
-        Resources,
-        Items
-    };
-
-
     enum ResourceItem
     {
         Wood,
@@ -142,8 +133,8 @@ namespace Devilguard
 
     class Inventory
     {
-        public Dictionary<ResourceItem, int> Resources = new Dictionary<ResourceItem, int>();
-        public Dictionary<InventoryItems, int> Items = new Dictionary<InventoryItems, int>();
+        public SortedDictionary<ResourceItem, int> Resources = new SortedDictionary<ResourceItem, int>();
+        public SortedDictionary<InventoryItems, int> Items = new SortedDictionary<InventoryItems, int>();
 
 
         //Resources
@@ -211,19 +202,18 @@ namespace Devilguard
 
     class CraftCatalog
     {
-        public HashSet<InventoryItems> Blueprints = new HashSet<InventoryItems>();
-
+        public SortedSet<InventoryItems> Blueprints = new SortedSet<InventoryItems>();
 
         public void AddBlueprint(InventoryItems i)
         {
-            if (!Blueprints.Contains(i))                
+            if (!Blueprints.Contains(i))
                 Blueprints.Add(i);
         }
 
         public void RemoveBlueprint(InventoryItems i)
         {
             if (Blueprints.Contains(i))
-                Blueprints.Remove(i);            
+                Blueprints.Remove(i);
         }
 
         public bool InCatalog(InventoryItems i)
