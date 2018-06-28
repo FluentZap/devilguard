@@ -14,6 +14,7 @@ namespace Devilguard
         public Rectangle Hitbox;
         public float Speed;
         public Inventory inventory = new Inventory();
+        public CraftCatalog CraftingBlueprints = new CraftCatalog();
         public bool UsedItem;
 
     }

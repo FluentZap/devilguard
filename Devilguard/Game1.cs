@@ -20,8 +20,7 @@ namespace Devilguard
         public bool Walkalble;
         public int Item;
         public int Durability;
-    }
-
+    }   
 
     /// <summary>
     /// This is the main type for your game.
@@ -53,6 +52,8 @@ namespace Devilguard
         bool InventoryOpen;
         bool InventoryKey;
 
+        CraftingDictionary craftingDictionary = new CraftingDictionary();
+        ResourceDictionary resourceDictionary = new ResourceDictionary();
 
         Actor_Type Player = new Actor_Type();        
         enum Direction { LEFT, RIGHT, UP, DOWN };
@@ -155,8 +156,14 @@ namespace Devilguard
             Screen_Zoom = 2.0f;
             Player.Hitbox = new Rectangle(13, 9, 6, 23);
             //Player.inventory.AddItem(Item.Wood, 30);
-            Player.inventory.AddItem(Item.Stone, 30);
-            Player.inventory.AddItem(Item.Iron, 30);
+            //Player.inventory.AddItem(Item.Stone, 30);
+            //Player.inventory.AddItem(Item.Iron, 30);
+
+
+            for (int x = 0; x < Enum.GetNames(typeof(InventoryItems)).Length; x++)
+                Player.CraftingBlueprints.AddBlueprint((InventoryItems)x);
+            
+
 
             base.Initialize();
             Window.IsBorderless = true;
@@ -171,14 +178,14 @@ namespace Devilguard
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.            
-            Background_Tiles[0] = Content.Load<Texture2D>("GrassTile");
-            Background_Tiles[1] = Content.Load<Texture2D>("RockTile");
+            Background_Tiles[0] = Content.Load<Texture2D>("BackTileMap");
             Actor_Sprites[0] = Content.Load<Texture2D>("King_0");
             Item_Tiles[0] = Content.Load<Texture2D>("Tree");
 
             UI_Textures[(int)SD_UI.Back] = Content.Load<Texture2D>("UI_Back");
             UI_Textures[(int)SD_UI.Button] = Content.Load<Texture2D>("UI_Button");
             UI_Textures[(int)SD_UI.Resources] = Content.Load<Texture2D>("UI_Resources");
+            UI_Textures[(int)SD_UI.Items] = Content.Load<Texture2D>("UI_Items");
 
             basicfont = Content.Load<SpriteFont>("BasicFont");
 
@@ -279,7 +286,7 @@ namespace Devilguard
                     {
                         if (t.Item == 1)
                         {
-                            Player.inventory.AddItem(Item.Wood, 5);
+                            Player.inventory.AddResource(ResourceItem.Wood, 5);
                             t.Item = 0;
                         }
 
@@ -288,9 +295,9 @@ namespace Devilguard
                             t.Durability--;
                             if (t.Durability <= 0)
                             {
-                                Player.inventory.AddItem(Item.Stone, 5);
+                                Player.inventory.AddResource(ResourceItem.Stone, 5);
                                 t.Durability = 5;
-                                t.Sprite = 0;
+                                t.Sprite = 2;
                             }                            
                         }
                         Player.UsedItem = true;
@@ -342,9 +349,10 @@ namespace Devilguard
                         //else
                         //{
                             byte dur = (byte)(tilemap[x, y].Durability * 51);
-                            spriteBatch.Draw(Background_Tiles[tilemap[x, y].Sprite], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Color(dur, dur, dur));
+                        
+                            spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(tilemap[x, y].Sprite * 32, 0, 32, 32), new Color(dur, dur, dur));
+                        //spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Color(dur, dur, dur));
                         //}
-                            
 
                         if (tilemap[x, y].Item == 1)
                             spriteBatch.Draw(Item_Tiles[0], new Rectangle(pos.X, pos.Y - GetATSI() * 2, GetATSI(), GetATSI() * 3), Color.White);
@@ -364,28 +372,68 @@ namespace Devilguard
         }
 
 
+
+
+
         void DrawInventory()
         {
-            Point p = new Point(Screen_Size.X / 2 - 196, Screen_Size.Y / 2 - 196);
+            Point p = new Point(Screen_Size.X / 2 - 392, Screen_Size.Y / 2 - 196);
             spriteBatch.Draw(UI_Textures[0], new Rectangle(p.X, p.Y, 392, 392), Color.White);
+            spriteBatch.Draw(UI_Textures[0], new Rectangle(p.X + 392, p.Y, 392, 392), Color.White);
 
             int width = 6;
             int xpos = 0;
             int ypos = 0;
-
-
-            foreach (var item in Player.inventory.Items)
-            {
+            
+            foreach (var item in Player.inventory.Resources)
+            {                
                 spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), Color.White);
                 spriteBatch.Draw(UI_Textures[(int)SD_UI.Resources], new Rectangle(p.X + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), new Rectangle((int)item.Key * 16, 0, 16, 16), Color.White);
 
-                spriteBatch.DrawString(basicfont, item.Value.ToString(), new Vector2(p.X + 55 + 42 * xpos, p.Y + 82 + 42 * ypos), Color.White);
+                spriteBatch.DrawString(basicfont, item.Value.ToString(), new Vector2(p.X + 55 + 42 * xpos, p.Y + 82 + 42 * ypos), Color.White);                
+
+                spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Value * item.Value).ToString() + "gp", new Vector2(p.X + 55 + 42 * xpos, p.Y + 114 + 42 * ypos), Color.White);
+
+                spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Weight * item.Value).ToString() + "wt", new Vector2(p.X + 55 + 42 * xpos, p.Y + 146 + 42 * ypos), Color.White);
+
+                xpos++;
+                if (xpos >= width)
+                { xpos = 0; ypos++; }                
+            }
+
+            width = 6;
+            xpos = 0;
+            ypos = 0;                        
+
+            
+            //Draw Crafting Area
+            foreach (var item in Player.CraftingBlueprints.Blueprints)
+            {                
+                bool CanCaft = true;
+                foreach (var craftitem in craftingDictionary.Data[item].ResourceCost)
+                    if (Player.inventory.ResourceCount(craftitem.Key) < craftitem.Value)
+                    { CanCaft = false; break;}
+
+                if (CanCaft)
+                {
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 392 + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), Color.White);
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 392 + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), new Rectangle((int)item * 16, 0, 16, 16), Color.White);
+                }
+                else
+                {
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 392 + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), Color.Gray);
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 392 + 50 + 42 * xpos, p.Y + 50 + 42 * ypos, 32, 32), new Rectangle((int)item * 16, 0, 16, 16), Color.Gray);
+                }
+                
+                //spriteBatch.DrawString(basicfont, item.Value.ToString(), new Vector2(p.X + 55 + 42 * xpos, p.Y + 82 + 42 * ypos), Color.White);
                 xpos++;
                 if (xpos >= width)
                 { xpos = 0; ypos++; }
-                
-            }
+            }            
+
+
         }
+        
 
 
     }
