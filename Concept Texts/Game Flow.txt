@@ -96,3 +96,9 @@ Tools
 
 Tools
 Wands
+
+
+Hardness
+0 Fists can break
+1 Wood tools
+2 Iron Tools
