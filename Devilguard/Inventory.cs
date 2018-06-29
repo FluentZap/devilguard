@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Devilguard
 {
 
-    enum EquipmentType
+    enum Listof_EquipmentType
     {
         WeaponLH,
         WeaponRH,
@@ -22,12 +22,12 @@ namespace Devilguard
     }
 
 
-    class InventoryEntry
+    class InventoryItem
     {
-        public InventoryItem item;
+        public Listof_InventoryItem item;
         public int Amount;
 
-        public InventoryEntry(InventoryItem i)
+        public InventoryItem(Listof_InventoryItem i)
         {
             item = i;
         }
@@ -35,12 +35,12 @@ namespace Devilguard
 
     class Inventory
     {
-        public SortedDictionary<ResourceItem, int> Resources = new SortedDictionary<ResourceItem, int>();
-        public SortedDictionary<int, InventoryEntry> Items = new SortedDictionary<int, InventoryEntry>();
+        public SortedDictionary<Listof_ResourceItem, int> Resources = new SortedDictionary<Listof_ResourceItem, int>();
+        public SortedDictionary<int, InventoryItem> Items = new SortedDictionary<int, InventoryItem>();
         public int InventorySize = 24;
 
         //Resources
-        public void AddResource(ResourceItem i, int amount)
+        public void AddResource(Listof_ResourceItem i, int amount)
         {
             if (Resources.ContainsKey(i))
                 Resources[i] += amount;
@@ -48,7 +48,7 @@ namespace Devilguard
                 Resources.Add(i, amount);
         }
 
-        public void RemoveResource(ResourceItem i, int amount)
+        public void RemoveResource(Listof_ResourceItem i, int amount)
         {
             if (Resources.ContainsKey(i))
             {
@@ -57,7 +57,7 @@ namespace Devilguard
                     Resources.Remove(i);
             }            
         }
-        public int ResourceCount(ResourceItem i)
+        public int ResourceCount(Listof_ResourceItem i)
         {
             if (Resources.ContainsKey(i))
                 return Resources[i];
@@ -69,7 +69,7 @@ namespace Devilguard
 
 
         //Items
-        public bool AddItem(InventoryEntry i)
+        public bool AddItem(InventoryItem i)
         {
             for (int x = 0; x < InventorySize; x++)
             {
@@ -88,7 +88,7 @@ namespace Devilguard
                 Items.Remove(i);
         }
 
-        public InventoryEntry GetItem(int i)
+        public InventoryItem GetItem(int i)
         {
             if (Items.ContainsKey(i))
                 return Items[i];
@@ -105,21 +105,21 @@ namespace Devilguard
 
     class CraftCatalog
     {
-        public SortedSet<InventoryItem> Blueprints = new SortedSet<InventoryItem>();
+        public SortedSet<Listof_InventoryItem> Blueprints = new SortedSet<Listof_InventoryItem>();
 
-        public void AddBlueprint(InventoryItem i)
+        public void AddBlueprint(Listof_InventoryItem i)
         {
             if (!Blueprints.Contains(i))
                 Blueprints.Add(i);
         }
 
-        public void RemoveBlueprint(InventoryItem i)
+        public void RemoveBlueprint(Listof_InventoryItem i)
         {
             if (Blueprints.Contains(i))
                 Blueprints.Remove(i);
         }
 
-        public bool InCatalog(InventoryItem i)
+        public bool InCatalog(Listof_InventoryItem i)
         {
             if (Blueprints.Contains(i))
                 return true;
