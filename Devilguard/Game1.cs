@@ -24,27 +24,16 @@ namespace Devilguard
         public int Durability;
         public int Hardness;
     }
+    
 
-    class Structure_Type
-    {
-        public Structures Type;
-        public int StructureDurabilityMax;
-        public int StructureDurability;
-        public int Hardness;
-    }
-   
+
     enum Tile_Types
     {
         Grass,
         Dirt
     }
 
-    enum Structures
-    {
-        Tree1,
-        Stone
-    }
-
+    
 
     /// <summary>
     /// This is the main type for your game.
@@ -81,6 +70,7 @@ namespace Devilguard
         Point SelectedTile;
         bool TileInReach;
 
+        StructureDictionary structureDictionary = new StructureDictionary();
         CraftingDictionary craftingDictionary = new CraftingDictionary();
         ResourceDictionary resourceDictionary = new ResourceDictionary();
         ItemDictionary itemDictionary = new ItemDictionary();
@@ -191,8 +181,8 @@ namespace Devilguard
 
             Screen_Zoom = 2.0f;
             Player.Hitbox = new Rectangle(13, 9, 6, 23);
-            //Player.inventory.AddResource(ResourceItem.Wood, 30000);
-            //Player.inventory.AddResource(ResourceItem.Stone, 30000);
+            Player.inventory.AddResource(ResourceItem.Wood, 30000);
+            Player.inventory.AddResource(ResourceItem.Stone, 30000);
             //Player.Loadout.UsableItems[0] = new InventoryEntry(InventoryItem.WoodClub);
             //Player.Loadout.UsableItems[1] = new InventoryEntry(InventoryItem.WoodBow);
             //Player.Loadout.UsableItems[3] = new InventoryEntry(InventoryItem.WoodAxe);
@@ -368,71 +358,25 @@ namespace Devilguard
                 SelectedTile = sel_pos;
                 Tile_Type_Entry t = tilemap[sel_pos.X, sel_pos.Y];
                 if (sel_pos.X >= 0 && sel_pos.X <= 1000 && sel_pos.Y >= 0 && sel_pos.Y <= 1000 && TileInReach)
+                {
                     if (Player.UsedItem == false)
-                    {
                         if (t.Structure != null)
                             if (t.Structure.Type == Structures.Tree1)
-                            {
-                                bool UseFist = false;
-                                if (Player.Loadout.UsableItems.ContainsKey(Player.SelectedItem))
-                                {
-                                    InventoryEntry item = Player.Loadout.UsableItems[Player.SelectedItem];
-                                    if (itemDictionary.Data[item.item].HarvestWood)
-                                        if (itemDictionary.Data[item.item].PowerTier >= t.Structure.Hardness)
-                                        {
-                                            t.Structure.StructureDurability -= itemDictionary.Data[item.item].Power;
-                                            Player.UseItem();
-                                            if (t.Structure.StructureDurability <= 0)
-                                            {
-                                                Player.inventory.AddResource(ResourceItem.Wood, 5);
-                                                t.Structure = null;                                                
-                                            }
-                                        }
-                                        else
-                                            UseFist = true;
-                                    else
-                                        UseFist = true;
+                                UI_CheckTree(t);
 
-                                }
-                                else
-                                    UseFist = true;
-
-                                if (UseFist)
-                                    if (t.Structure.Hardness <= 0)
-                                    {
-                                        t.Structure.StructureDurability -= 1;
-                                        Player.UseItem();
-                                        if (t.Structure.StructureDurability <= 0)
-                                        {
-                                            Player.inventory.AddResource(ResourceItem.Wood, 5);
-                                            t.Structure = null;                                            
-                                        }
-                                    }
-
-                            }
-
+                    if (Player.UsedItem == false)
                         if (t.Structure != null)
                             if (t.Structure.Type == Structures.Stone)
-                            {
-                                if (Player.Loadout.UsableItems.ContainsKey(Player.SelectedItem))
-                                {
-                                    InventoryEntry item = Player.Loadout.UsableItems[Player.SelectedItem];
-                                    if (itemDictionary.Data[item.item].HarvestStone)
-                                        if (itemDictionary.Data[item.item].PowerTier >= t.Structure.Hardness)
-                                        {
-                                            t.Structure.StructureDurability -= itemDictionary.Data[item.item].Power;
-                                            Player.UseItem();
-                                            if (t.Structure.StructureDurability <= 0)
-                                            {
-                                                Player.inventory.AddResource(ResourceItem.Stone, 2);
-                                                t.Structure = null;                                             
-                                            }
-                                        }
+                                UI_CheckStone(t);
 
 
-                                }
-                            }                                                
-                    }
+                    if (t.Structure == null)
+                        UI_BuildItem(t);
+
+
+
+
+                }
             }
 
 
@@ -440,7 +384,78 @@ namespace Devilguard
 
         }
 
+        void UI_BuildItem(Tile_Type_Entry t)
+        {
+            if (Player.Loadout.UsableItems.ContainsKey(Player.SelectedItem))
+            {
+                InventoryEntry item = Player.Loadout.UsableItems[Player.SelectedItem];
+                if (itemDictionary.Data[item.item].BuildTile != Structures.None)
+                {
+                    t.Structure = new Structure_Type() { Type = itemDictionary.Data[item.item].BuildTile, StructureDurabilityMax = 10, StructureDurability = 10, Hardness = 1 };
+                }                                   
+            }
+        }
 
+
+            void UI_CheckTree(Tile_Type_Entry t)
+        {
+            
+                bool UseFist = false;
+                if (Player.Loadout.UsableItems.ContainsKey(Player.SelectedItem))
+                {
+                    InventoryEntry item = Player.Loadout.UsableItems[Player.SelectedItem];
+                    if (itemDictionary.Data[item.item].HarvestWood)
+                        if (itemDictionary.Data[item.item].PowerTier >= t.Structure.Hardness)
+                        {
+                            t.Structure.StructureDurability -= itemDictionary.Data[item.item].Power;
+                            Player.UseItem();
+                            if (t.Structure.StructureDurability <= 0)
+                            {
+                                Player.inventory.AddResource(ResourceItem.Wood, 5);
+                                t.Structure = null;
+                            }
+                        }
+                        else
+                            UseFist = true;
+                    else
+                        UseFist = true;
+
+                }
+                else
+                    UseFist = true;
+
+                if (UseFist)
+                    if (t.Structure.Hardness <= 0)
+                    {
+                        t.Structure.StructureDurability -= 1;
+                        Player.UseItem();
+                        if (t.Structure.StructureDurability <= 0)
+                        {
+                            Player.inventory.AddResource(ResourceItem.Wood, 5);
+                            t.Structure = null;
+                        }
+                    }            
+
+        }
+
+        void UI_CheckStone(Tile_Type_Entry t)
+        {
+            if (Player.Loadout.UsableItems.ContainsKey(Player.SelectedItem))
+            {
+                InventoryEntry item = Player.Loadout.UsableItems[Player.SelectedItem];
+                if (itemDictionary.Data[item.item].HarvestStone)
+                    if (itemDictionary.Data[item.item].PowerTier >= t.Structure.Hardness)
+                    {
+                        t.Structure.StructureDurability -= itemDictionary.Data[item.item].Power;
+                        Player.UseItem();
+                        if (t.Structure.StructureDurability <= 0)
+                        {
+                            Player.inventory.AddResource(ResourceItem.Stone, 2);
+                            t.Structure = null;
+                        }
+                    }
+            }
+        }
 
         void UI_Bar()
         {
@@ -628,6 +643,11 @@ namespace Devilguard
 
                             if (tilemap[x, y].Structure.Type == Structures.Stone)
                                 spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(1 * 32, 0, 32, 32), new Color(dur, dur, dur));
+
+                            if (tilemap[x, y].Structure.Type == Structures.StoneThrone)
+                                spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle((int)InventoryItem.StoneThrone * 32, 0, 32, 32), new Color(dur, dur, dur));
+
+
                         }
                             
                     }
@@ -661,7 +681,7 @@ namespace Devilguard
                 Point p;
                 p.X = Mouse.GetState().Position.X;
                 p.Y = Mouse.GetState().Position.Y;
-                spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X, p.Y, 32, 32), new Rectangle((int)MouseHeldItem.item * 16, 0, 16, 16), Color.White);
+                spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X, p.Y, 32, 32), new Rectangle((int)MouseHeldItem.item * 32, 0, 32, 32), Color.White);
 
             }
             
@@ -704,7 +724,7 @@ namespace Devilguard
                         c = Color.White;
 
                     spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 6 + 72 * xpos, p.Y + 12, 64, 64), c);
-                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 6 + 72 * xpos, p.Y + 12, 64, 64), new Rectangle((int)item.item * 16, 0, 16, 16), c);
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 6 + 72 * xpos, p.Y + 12, 64, 64), new Rectangle((int)item.item * 32, 0, 32, 32), c);
                 }
                 xpos++;
             }
@@ -730,7 +750,7 @@ namespace Devilguard
             foreach (var item in Player.inventory.Resources)
             {
                 spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), Color.White);
-                spriteBatch.Draw(UI_Textures[(int)SD_UI.Resources], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item.Key * 16, 0, 16, 16), Color.White);
+                spriteBatch.Draw(UI_Textures[(int)SD_UI.Resources], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item.Key * 32, 0, 32, 32), Color.White);
                 spriteBatch.DrawString(basicfont, item.Value.ToString(), new Vector2(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos), Color.White);
                 
                 //spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Value * item.Value).ToString() + "gp", new Vector2(p.X + 55 + 42 * xpos, p.Y + 114 + 42 * ypos), Color.White);
@@ -750,7 +770,7 @@ namespace Devilguard
                     var item = Player.inventory.Items[x];
                     
                     spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), Color.White);
-                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item.item * 16, 0, 16, 16), Color.White);
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item.item * 32, 0, 32, 32), Color.White);
                     //spriteBatch.DrawString(basicfont, itemDictionary.Data[item.Value.item].Name, new Vector2(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos), Color.White);                
 
                     //spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Value * item.Value).ToString() + "gp", new Vector2(p.X + 55 + 42 * xpos, p.Y + 114 + 42 * ypos), Color.White);
@@ -778,12 +798,12 @@ namespace Devilguard
                 if (CanCaft)
                 {
                     spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), Color.White);
-                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item * 16, 0, 16, 16), Color.White);
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item * 32, 0, 32, 32), Color.White);
                 }
                 else
                 {
                     spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), Color.Gray);
-                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item * 16, 0, 16, 16), Color.Gray);
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item * 32, 0, 32, 32), Color.Gray);
                 }
                 
                 //spriteBatch.DrawString(basicfont, item.Value.ToString(), new Vector2(p.X + 55 + 42 * xpos, p.Y + 82 + 42 * ypos), Color.White);

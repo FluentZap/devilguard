@@ -23,7 +23,8 @@ namespace Devilguard
             WoodHoe,
             WoodSickle,
             WoodClub,
-            WoodBow
+            WoodBow,
+            StoneThrone
         };
 
 
@@ -32,6 +33,53 @@ namespace Devilguard
             Stone,
             Iron,
         };
+
+    class Structure_Type
+    {
+        public Structures Type;
+        public int StructureDurabilityMax = 1;
+        public int StructureDurability;
+        public int Hardness;
+    }    
+
+    enum Structures
+    {
+        None = -1,
+        Tree1,
+        Stone,
+        WoodWall,
+        StoneThrone
+    }
+
+
+
+
+    //Item Dictionary
+    class StructureDictionaryEntry
+    {
+        public string Name;
+        public int Value;
+        public int Weight;
+        public int DurabilityMax;
+        public int Durability;
+        public int Sprite;
+        public bool Walkalble;        
+        public int Drops;
+        public MineHardness Hardness;
+    }
+
+    class StructureDictionary
+    {
+        public Dictionary<Structures, StructureDictionaryEntry> Data = new Dictionary<Structures, StructureDictionaryEntry>();
+        public StructureDictionary()
+        {
+            //Buildables
+            Data.Add(Structures.StoneThrone, new StructureDictionaryEntry() { Name = "Stone Throne", Value = 50, Weight = 50, DurabilityMax = 100, Durability = 100 });
+            
+        }
+    }
+
+
 
     class TileDictionary
     {
@@ -53,6 +101,8 @@ namespace Devilguard
         public int Cooldown;
         public int DurabilityMax;
         public int Durability;
+        public Structures BuildTile = Structures.None;
+
 
         public bool HarvestStone;
         public bool HarvestWood;
@@ -67,6 +117,7 @@ namespace Devilguard
         {
             //Buildables
             Data.Add(InventoryItem.WoodChest, new ItemDictionaryEntry() { Name = "Wooden Chest", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100 });
+            Data.Add(InventoryItem.StoneThrone, new ItemDictionaryEntry() { Name = "Stone Throne", Value = 100, Weight = 50, DurabilityMax = 100, Durability = 100, BuildTile = Structures.StoneThrone });
 
             //Equipment
             Data.Add(InventoryItem.WoodPickAxe, new ItemDictionaryEntry() { Name = "Wooden PickAxe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestStone = true });
@@ -153,6 +204,8 @@ namespace Devilguard
         public Dictionary<InventoryItem, CraftingDictinaryEntry> Data = new Dictionary<InventoryItem, CraftingDictinaryEntry>();
         public CraftingDictionary()
         {
+            Data.Add(InventoryItem.StoneThrone, new CraftingDictinaryEntry("Stone Throne", 100, 50, ResourceItem.Stone, 50));
+
             Data.Add(InventoryItem.WoodChest, new CraftingDictinaryEntry("Wooden Chest", 10, 50, ResourceItem.Wood, 40));
             Data.Add(InventoryItem.WoodPickAxe, new CraftingDictinaryEntry("Wooden PickAxe", 10, 10, ResourceItem.Wood, 20));
             Data.Add(InventoryItem.WoodAxe, new CraftingDictinaryEntry("Wooden Axe", 10, 10, ResourceItem.Wood, 15, ResourceItem.Stone, 5));
