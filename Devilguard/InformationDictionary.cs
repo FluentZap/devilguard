@@ -6,43 +6,58 @@ using System.Threading.Tasks;
 
 namespace Devilguard
 {
-        enum ResourceItem
-        {
-            Wood,
-            Stone,
-            Iron,
-            Dirt
-        };
+    enum Listof_ResourceItem
+    {
+        Wood,
+        Stone,
+        Iron,
+        Dirt
+    };
 
-        enum InventoryItem : int
-        {
-            WoodChest,
-            WoodPickAxe,
-            WoodAxe,
-            WoodShovel,
-            WoodHoe,
-            WoodSickle,
-            WoodClub,
-            WoodBow,
-            StoneThrone
-        };
+    //this is the master list of items
+    enum Listof_InventoryItem : int
+    {
+        WoodChest,
+        WoodPickAxe,
+        WoodAxe,
+        WoodShovel,
+        WoodHoe,
+        WoodSickle,
+        WoodClub,
+        WoodBow,
+        StoneThrone
+    };
 
 
-        enum MineHardness : byte
-        {
-            Stone,
-            Iron,
-        };
+    enum Listof_MineHardness : byte
+    {
+        Stone,
+        Iron,
+    };
+
+    
+    class Tile_Type
+    {
+        public Listof_Tile_Type ID;
+        public Structure_Type Structure;        
+    }
+
+
+
+    enum Listof_Tile_Type
+    {
+        Grass,
+        Dirt
+    }
+
 
     class Structure_Type
     {
-        public Structures Type;
-        public int StructureDurabilityMax = 1;
-        public int StructureDurability;
-        public int Hardness;
-    }    
+        public Listof_Structures Type;
+        public int Durability;        
+    }
 
-    enum Structures
+    enum Listof_Structures
     {
         None = -1,
         Tree1,
@@ -50,6 +65,15 @@ namespace Devilguard
         WoodWall,
         StoneThrone
     }
+
+    class Catalog
+    {
+        public StructureDictionary structure = new StructureDictionary();
+        public CraftingDictionary crafting = new CraftingDictionary();
+        public ResourceDictionary resource = new ResourceDictionary();
+        public ItemDictionary item = new ItemDictionary();
+        public TileDictionary tile = new TileDictionary();
+    }        
 
 
 
@@ -60,35 +84,62 @@ namespace Devilguard
         public string Name;
         public int Value;
         public int Weight;
-        public int DurabilityMax;
-        public int Durability;
+        public int Durability;        
         public int Sprite;
-        public bool Walkalble;        
-        public int Drops;
-        public MineHardness Hardness;
+        public bool Walkalble;
+        public Listof_MineHardness Hardness;
+
+        public bool DropsItem;
+        public bool DropsResource;
+
+        public KeyValuePair<int, Listof_ResourceItem> ResourceDrop;
+        public KeyValuePair<int, Listof_InventoryItem> ItemDrop;
+
+        //public Listof_ResourceItem DropsResource;
+        //public int DropsResourceAmount;
+        //public Listof_InventoryItem DropsItem;
+        //public int DropsItemAmount;
+        
     }
 
     class StructureDictionary
     {
-        public Dictionary<Structures, StructureDictionaryEntry> Data = new Dictionary<Structures, StructureDictionaryEntry>();
+        public Dictionary<Listof_Structures, StructureDictionaryEntry> Data = new Dictionary<Listof_Structures, StructureDictionaryEntry>();
         public StructureDictionary()
         {
             //Buildables
-            Data.Add(Structures.StoneThrone, new StructureDictionaryEntry() { Name = "Stone Throne", Value = 50, Weight = 50, DurabilityMax = 100, Durability = 100 });
-            
+            Data.Add(Listof_Structures.Tree1, new StructureDictionaryEntry() { Name = "Tree", Value = 0, Weight = 0, Durability = 12, DropsResource = true, ResourceDrop = new KeyValuePair<int, Listof_ResourceItem>(5, Listof_ResourceItem.Wood) });
+            Data.Add(Listof_Structures.Stone, new StructureDictionaryEntry() { Name = "Stone", Value = 0, Weight = 0, Durability = 20, DropsResource = true, ResourceDrop = new KeyValuePair<int, Listof_ResourceItem>(2, Listof_ResourceItem.Stone)});
+
+            Data.Add(Listof_Structures.StoneThrone, new StructureDictionaryEntry() { Name = "Stone Throne", Value = 100, Weight = 50, Durability = 50 });
+            //Data.Add(Listof_Structures.StoneThrone, new StructureDictionaryEntry() { Name = "Stone Throne", Value = 50, Weight = 50, DurabilityMax = 100, Durability = 100 });
+
         }
     }
 
 
 
-    class TileDictionary
+    class TileDictionaryEntry
     {
         public int Sprite;
         public bool Walkalble;
         public int Durability;
         public int Drops;
-        public MineHardness Hardness;
+        public Listof_MineHardness Hardness;
     }
+
+
+    class TileDictionary
+    {
+        public Dictionary<Listof_Tile_Type, TileDictionaryEntry> Data = new Dictionary<Listof_Tile_Type, TileDictionaryEntry>();
+        public TileDictionary()
+        {
+            Data.Add(Listof_Tile_Type.Grass, new TileDictionaryEntry() { Sprite = 0, Walkalble = true, Hardness = Listof_MineHardness.Stone });
+            Data.Add(Listof_Tile_Type.Dirt, new TileDictionaryEntry() { Sprite = 2, Walkalble = true, Hardness = Listof_MineHardness.Stone });
+        }         
+    }
+
+
 
     //Item Dictionary
     class ItemDictionaryEntry
@@ -101,7 +152,7 @@ namespace Devilguard
         public int Cooldown;
         public int DurabilityMax;
         public int Durability;
-        public Structures BuildTile = Structures.None;
+        public Listof_Structures BuildTile = Listof_Structures.None;
 
 
         public bool HarvestStone;
@@ -112,23 +163,23 @@ namespace Devilguard
 
     class ItemDictionary
     {
-        public Dictionary<InventoryItem, ItemDictionaryEntry> Data = new Dictionary<InventoryItem, ItemDictionaryEntry>();
+        public Dictionary<Listof_InventoryItem, ItemDictionaryEntry> Data = new Dictionary<Listof_InventoryItem, ItemDictionaryEntry>();
         public ItemDictionary()
         {
             //Buildables
-            Data.Add(InventoryItem.WoodChest, new ItemDictionaryEntry() { Name = "Wooden Chest", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100 });
-            Data.Add(InventoryItem.StoneThrone, new ItemDictionaryEntry() { Name = "Stone Throne", Value = 100, Weight = 50, DurabilityMax = 100, Durability = 100, BuildTile = Structures.StoneThrone });
+            Data.Add(Listof_InventoryItem.WoodChest, new ItemDictionaryEntry() { Name = "Wooden Chest", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100 });
+            Data.Add(Listof_InventoryItem.StoneThrone, new ItemDictionaryEntry() { Name = "Stone Throne", Value = 100, Weight = 50, DurabilityMax = 100, Durability = 100, BuildTile = Listof_Structures.StoneThrone });
 
             //Equipment
-            Data.Add(InventoryItem.WoodPickAxe, new ItemDictionaryEntry() { Name = "Wooden PickAxe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestStone = true });
-            Data.Add(InventoryItem.WoodAxe, new ItemDictionaryEntry() { Name = "Wooden Axe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestWood = true });
-            Data.Add(InventoryItem.WoodShovel, new ItemDictionaryEntry() { Name = "Wooden Shovel", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestDirt = true });
-            Data.Add(InventoryItem.WoodHoe, new ItemDictionaryEntry() { Name = "Wooden Hoe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3 });
-            Data.Add(InventoryItem.WoodSickle, new ItemDictionaryEntry() { Name = "Wooden Sickle", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3 });
+            Data.Add(Listof_InventoryItem.WoodPickAxe, new ItemDictionaryEntry() { Name = "Wooden PickAxe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestStone = true });
+            Data.Add(Listof_InventoryItem.WoodAxe, new ItemDictionaryEntry() { Name = "Wooden Axe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestWood = true });
+            Data.Add(Listof_InventoryItem.WoodShovel, new ItemDictionaryEntry() { Name = "Wooden Shovel", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestDirt = true });
+            Data.Add(Listof_InventoryItem.WoodHoe, new ItemDictionaryEntry() { Name = "Wooden Hoe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3 });
+            Data.Add(Listof_InventoryItem.WoodSickle, new ItemDictionaryEntry() { Name = "Wooden Sickle", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3 });
 
             //Weapons
-            Data.Add(InventoryItem.WoodClub, new ItemDictionaryEntry() { Name = "Wooden Club", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, PowerTier = 1, Power = 1 });
-            Data.Add(InventoryItem.WoodBow, new ItemDictionaryEntry() { Name = "Wooden Bow", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, PowerTier = 1, Power = 1 });
+            Data.Add(Listof_InventoryItem.WoodClub, new ItemDictionaryEntry() { Name = "Wooden Club", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, PowerTier = 1, Power = 1 });
+            Data.Add(Listof_InventoryItem.WoodBow, new ItemDictionaryEntry() { Name = "Wooden Bow", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, PowerTier = 1, Power = 1 });
         }
     }
 
@@ -149,13 +200,13 @@ namespace Devilguard
 
     class ResourceDictionary
     {
-        public Dictionary<ResourceItem, ResourceDictionaryEntry> Data = new Dictionary<ResourceItem, ResourceDictionaryEntry>();
+        public Dictionary<Listof_ResourceItem, ResourceDictionaryEntry> Data = new Dictionary<Listof_ResourceItem, ResourceDictionaryEntry>();
         public ResourceDictionary()
         {
-            Data.Add(ResourceItem.Wood, new ResourceDictionaryEntry("Wood", 3, 2));
-            Data.Add(ResourceItem.Stone, new ResourceDictionaryEntry("Stone", 5, 5));
-            Data.Add(ResourceItem.Iron, new ResourceDictionaryEntry("Iron", 20, 10));
-            Data.Add(ResourceItem.Dirt, new ResourceDictionaryEntry("Dirt", 0, 5));
+            Data.Add(Listof_ResourceItem.Wood, new ResourceDictionaryEntry("Wood", 3, 2));
+            Data.Add(Listof_ResourceItem.Stone, new ResourceDictionaryEntry("Stone", 5, 5));
+            Data.Add(Listof_ResourceItem.Iron, new ResourceDictionaryEntry("Iron", 20, 10));
+            Data.Add(Listof_ResourceItem.Dirt, new ResourceDictionaryEntry("Dirt", 0, 5));
         }
     }
 
@@ -163,12 +214,12 @@ namespace Devilguard
     //Crafting Dictionary
     class CraftingDictinaryEntry
     {
-        public Dictionary<ResourceItem, int> ResourceCost = new Dictionary<ResourceItem, int>();
+        public Dictionary<Listof_ResourceItem, int> ResourceCost = new Dictionary<Listof_ResourceItem, int>();
         public string Name;
         public int Value;
         public int Weight;
 
-        public CraftingDictinaryEntry(String name, int value, int weight, ResourceItem r1, int c1)
+        public CraftingDictinaryEntry(String name, int value, int weight, Listof_ResourceItem r1, int c1)
         {
             Name = name;
             Value = value;
@@ -176,7 +227,7 @@ namespace Devilguard
             ResourceCost.Add(r1, c1);
         }
 
-        public CraftingDictinaryEntry(String name, int value, int weight, ResourceItem r1, int c1, ResourceItem r2, int c2)
+        public CraftingDictinaryEntry(String name, int value, int weight, Listof_ResourceItem r1, int c1, Listof_ResourceItem r2, int c2)
         {
             Name = name;
             Value = value;
@@ -185,7 +236,7 @@ namespace Devilguard
             ResourceCost.Add(r2, c2);
         }
 
-        public CraftingDictinaryEntry(String name, int value, int weight, ResourceItem r1, int c1, ResourceItem r2, int c2, ResourceItem r3, int c3)
+        public CraftingDictinaryEntry(String name, int value, int weight, Listof_ResourceItem r1, int c1, Listof_ResourceItem r2, int c2, Listof_ResourceItem r3, int c3)
         {
             Name = name;
             Value = value;
@@ -201,19 +252,19 @@ namespace Devilguard
 
     class CraftingDictionary
     {
-        public Dictionary<InventoryItem, CraftingDictinaryEntry> Data = new Dictionary<InventoryItem, CraftingDictinaryEntry>();
+        public Dictionary<Listof_InventoryItem, CraftingDictinaryEntry> Data = new Dictionary<Listof_InventoryItem, CraftingDictinaryEntry>();
         public CraftingDictionary()
         {
-            Data.Add(InventoryItem.StoneThrone, new CraftingDictinaryEntry("Stone Throne", 100, 50, ResourceItem.Stone, 50));
+            Data.Add(Listof_InventoryItem.StoneThrone, new CraftingDictinaryEntry("Stone Throne", 100, 50, Listof_ResourceItem.Stone, 50));
 
-            Data.Add(InventoryItem.WoodChest, new CraftingDictinaryEntry("Wooden Chest", 10, 50, ResourceItem.Wood, 40));
-            Data.Add(InventoryItem.WoodPickAxe, new CraftingDictinaryEntry("Wooden PickAxe", 10, 10, ResourceItem.Wood, 20));
-            Data.Add(InventoryItem.WoodAxe, new CraftingDictinaryEntry("Wooden Axe", 10, 10, ResourceItem.Wood, 15, ResourceItem.Stone, 5));
-            Data.Add(InventoryItem.WoodShovel, new CraftingDictinaryEntry("Wooden Shovel", 10, 10, ResourceItem.Wood, 15, ResourceItem.Stone, 5));
-            Data.Add(InventoryItem.WoodHoe, new CraftingDictinaryEntry("Wooden Hoe", 10, 10, ResourceItem.Wood, 50, ResourceItem.Stone, 5));
-            Data.Add(InventoryItem.WoodSickle, new CraftingDictinaryEntry("Wooden Sickel", 10, 10, ResourceItem.Wood, 50, ResourceItem.Stone, 5));
-            Data.Add(InventoryItem.WoodClub, new CraftingDictinaryEntry("Wooden Club", 15, 15, ResourceItem.Wood, 40));
-            Data.Add(InventoryItem.WoodBow, new CraftingDictinaryEntry("Wooden Bow", 20, 10, ResourceItem.Wood, 60));
+            Data.Add(Listof_InventoryItem.WoodChest, new CraftingDictinaryEntry("Wooden Chest", 10, 50, Listof_ResourceItem.Wood, 40));
+            Data.Add(Listof_InventoryItem.WoodPickAxe, new CraftingDictinaryEntry("Wooden PickAxe", 10, 10, Listof_ResourceItem.Wood, 20));
+            Data.Add(Listof_InventoryItem.WoodAxe, new CraftingDictinaryEntry("Wooden Axe", 10, 10, Listof_ResourceItem.Wood, 15, Listof_ResourceItem.Stone, 5));
+            Data.Add(Listof_InventoryItem.WoodShovel, new CraftingDictinaryEntry("Wooden Shovel", 10, 10, Listof_ResourceItem.Wood, 15, Listof_ResourceItem.Stone, 5));
+            Data.Add(Listof_InventoryItem.WoodHoe, new CraftingDictinaryEntry("Wooden Hoe", 10, 10, Listof_ResourceItem.Wood, 50, Listof_ResourceItem.Stone, 5));
+            Data.Add(Listof_InventoryItem.WoodSickle, new CraftingDictinaryEntry("Wooden Sickel", 10, 10, Listof_ResourceItem.Wood, 50, Listof_ResourceItem.Stone, 5));
+            Data.Add(Listof_InventoryItem.WoodClub, new CraftingDictinaryEntry("Wooden Club", 15, 15, Listof_ResourceItem.Wood, 40));
+            Data.Add(Listof_InventoryItem.WoodBow, new CraftingDictinaryEntry("Wooden Bow", 20, 10, Listof_ResourceItem.Wood, 60));
         }
     }
 }
