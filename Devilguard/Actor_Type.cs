@@ -12,12 +12,7 @@ namespace Devilguard
     
     class Actor_Loadout
     {
-        public InventoryItem LeftHand;
-        public InventoryItem RightHand;
-        public InventoryItem Head;
-        public InventoryItem Armor;
-        public InventoryItem Accessory1;
-        public InventoryItem Accessory2;
+        public InventoryItem[] Equipment = new InventoryItem[6];      
         public SortedDictionary<int, InventoryItem> UsableItems = new SortedDictionary<int, InventoryItem>();
     }
 

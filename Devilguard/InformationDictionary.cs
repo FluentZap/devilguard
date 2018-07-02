@@ -25,7 +25,12 @@ namespace Devilguard
         WoodSickle,
         WoodClub,
         WoodBow,
-        StoneThrone
+        StoneThrone,
+        StoneHelmet,
+        StoneArmor,
+        StoneShield,
+        StoneRing,
+
     };
 
 
@@ -66,6 +71,21 @@ namespace Devilguard
         StoneThrone
     }
 
+    enum Listof_ItemTypes
+    {
+        None = -1,
+        WeaponOneHanded,
+        WeaponTwoHanded,
+        Shield,
+        Headpiece,
+        Armor,
+        Accessory,
+        Tool,
+        Wand
+    }
+
+
+
     class Catalog
     {
         public StructureDictionary structure = new StructureDictionary();
@@ -102,20 +122,7 @@ namespace Devilguard
         
     }
 
-    class StructureDictionary
-    {
-        public Dictionary<Listof_Structures, StructureDictionaryEntry> Data = new Dictionary<Listof_Structures, StructureDictionaryEntry>();
-        public StructureDictionary()
-        {
-            //Buildables
-            Data.Add(Listof_Structures.Tree1, new StructureDictionaryEntry() { Name = "Tree", Value = 0, Weight = 0, Durability = 12, DropsResource = true, ResourceDrop = new KeyValuePair<int, Listof_ResourceItem>(5, Listof_ResourceItem.Wood) });
-            Data.Add(Listof_Structures.Stone, new StructureDictionaryEntry() { Name = "Stone", Value = 0, Weight = 0, Durability = 20, DropsResource = true, ResourceDrop = new KeyValuePair<int, Listof_ResourceItem>(2, Listof_ResourceItem.Stone)});
-
-            Data.Add(Listof_Structures.StoneThrone, new StructureDictionaryEntry() { Name = "Stone Throne", Value = 100, Weight = 50, Durability = 50 });
-            //Data.Add(Listof_Structures.StoneThrone, new StructureDictionaryEntry() { Name = "Stone Throne", Value = 50, Weight = 50, DurabilityMax = 100, Durability = 100 });
-
-        }
-    }
+    
 
 
 
@@ -128,16 +135,7 @@ namespace Devilguard
         public Listof_MineHardness Hardness;
     }
 
-
-    class TileDictionary
-    {
-        public Dictionary<Listof_Tile_Type, TileDictionaryEntry> Data = new Dictionary<Listof_Tile_Type, TileDictionaryEntry>();
-        public TileDictionary()
-        {
-            Data.Add(Listof_Tile_Type.Grass, new TileDictionaryEntry() { Sprite = 0, Walkalble = true, Hardness = Listof_MineHardness.Stone });
-            Data.Add(Listof_Tile_Type.Dirt, new TileDictionaryEntry() { Sprite = 2, Walkalble = true, Hardness = Listof_MineHardness.Stone });
-        }         
-    }
+    
 
 
 
@@ -153,6 +151,7 @@ namespace Devilguard
         public int DurabilityMax;
         public int Durability;
         public Listof_Structures BuildTile = Listof_Structures.None;
+        public Listof_ItemTypes ItemType = Listof_ItemTypes.None;
 
 
         public bool HarvestStone;
@@ -161,28 +160,7 @@ namespace Devilguard
 
     }
 
-    class ItemDictionary
-    {
-        public Dictionary<Listof_InventoryItem, ItemDictionaryEntry> Data = new Dictionary<Listof_InventoryItem, ItemDictionaryEntry>();
-        public ItemDictionary()
-        {
-            //Buildables
-            Data.Add(Listof_InventoryItem.WoodChest, new ItemDictionaryEntry() { Name = "Wooden Chest", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100 });
-            Data.Add(Listof_InventoryItem.StoneThrone, new ItemDictionaryEntry() { Name = "Stone Throne", Value = 100, Weight = 50, DurabilityMax = 100, Durability = 100, BuildTile = Listof_Structures.StoneThrone });
-
-            //Equipment
-            Data.Add(Listof_InventoryItem.WoodPickAxe, new ItemDictionaryEntry() { Name = "Wooden PickAxe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestStone = true });
-            Data.Add(Listof_InventoryItem.WoodAxe, new ItemDictionaryEntry() { Name = "Wooden Axe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestWood = true });
-            Data.Add(Listof_InventoryItem.WoodShovel, new ItemDictionaryEntry() { Name = "Wooden Shovel", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestDirt = true });
-            Data.Add(Listof_InventoryItem.WoodHoe, new ItemDictionaryEntry() { Name = "Wooden Hoe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3 });
-            Data.Add(Listof_InventoryItem.WoodSickle, new ItemDictionaryEntry() { Name = "Wooden Sickle", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3 });
-
-            //Weapons
-            Data.Add(Listof_InventoryItem.WoodClub, new ItemDictionaryEntry() { Name = "Wooden Club", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, PowerTier = 1, Power = 1 });
-            Data.Add(Listof_InventoryItem.WoodBow, new ItemDictionaryEntry() { Name = "Wooden Bow", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, PowerTier = 1, Power = 1 });
-        }
-    }
-
+    
     //Resource Dictionary
     class ResourceDictionaryEntry
     {
@@ -198,17 +176,7 @@ namespace Devilguard
         }
     }
 
-    class ResourceDictionary
-    {
-        public Dictionary<Listof_ResourceItem, ResourceDictionaryEntry> Data = new Dictionary<Listof_ResourceItem, ResourceDictionaryEntry>();
-        public ResourceDictionary()
-        {
-            Data.Add(Listof_ResourceItem.Wood, new ResourceDictionaryEntry("Wood", 3, 2));
-            Data.Add(Listof_ResourceItem.Stone, new ResourceDictionaryEntry("Stone", 5, 5));
-            Data.Add(Listof_ResourceItem.Iron, new ResourceDictionaryEntry("Iron", 20, 10));
-            Data.Add(Listof_ResourceItem.Dirt, new ResourceDictionaryEntry("Dirt", 0, 5));
-        }
-    }
+    
 
 
     //Crafting Dictionary
@@ -265,6 +233,81 @@ namespace Devilguard
             Data.Add(Listof_InventoryItem.WoodSickle, new CraftingDictinaryEntry("Wooden Sickel", 10, 10, Listof_ResourceItem.Wood, 50, Listof_ResourceItem.Stone, 5));
             Data.Add(Listof_InventoryItem.WoodClub, new CraftingDictinaryEntry("Wooden Club", 15, 15, Listof_ResourceItem.Wood, 40));
             Data.Add(Listof_InventoryItem.WoodBow, new CraftingDictinaryEntry("Wooden Bow", 20, 10, Listof_ResourceItem.Wood, 60));
+
+
+            Data.Add(Listof_InventoryItem.StoneHelmet, new CraftingDictinaryEntry("Wooden Bow", 20, 10, Listof_ResourceItem.Stone, 20));
+            Data.Add(Listof_InventoryItem.StoneArmor, new CraftingDictinaryEntry("Wooden Bow", 20, 10, Listof_ResourceItem.Stone, 20));
+            Data.Add(Listof_InventoryItem.StoneShield, new CraftingDictinaryEntry("Wooden Bow", 20, 10, Listof_ResourceItem.Stone, 20));
+            Data.Add(Listof_InventoryItem.StoneRing, new CraftingDictinaryEntry("Wooden Bow", 20, 10, Listof_ResourceItem.Stone, 20));
+            
+
+        }
+    }
+
+    class ItemDictionary
+    {
+        public Dictionary<Listof_InventoryItem, ItemDictionaryEntry> Data = new Dictionary<Listof_InventoryItem, ItemDictionaryEntry>();
+        public ItemDictionary()
+        {
+            //Buildables
+            Data.Add(Listof_InventoryItem.WoodChest, new ItemDictionaryEntry() { Name = "Wooden Chest", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100 });
+            Data.Add(Listof_InventoryItem.StoneThrone, new ItemDictionaryEntry() { Name = "Stone Throne", Value = 100, Weight = 50, DurabilityMax = 100, Durability = 100, BuildTile = Listof_Structures.StoneThrone });
+
+            //Tools
+            Data.Add(Listof_InventoryItem.WoodPickAxe, new ItemDictionaryEntry() { Name = "Wooden PickAxe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestStone = true });
+            Data.Add(Listof_InventoryItem.WoodAxe, new ItemDictionaryEntry() { Name = "Wooden Axe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestWood = true });
+            Data.Add(Listof_InventoryItem.WoodShovel, new ItemDictionaryEntry() { Name = "Wooden Shovel", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3, HarvestDirt = true });
+            Data.Add(Listof_InventoryItem.WoodHoe, new ItemDictionaryEntry() { Name = "Wooden Hoe", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3 });
+            Data.Add(Listof_InventoryItem.WoodSickle, new ItemDictionaryEntry() { Name = "Wooden Sickle", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Cooldown = 3, PowerTier = 1, Power = 3 });
+
+            //Weapons
+            Data.Add(Listof_InventoryItem.WoodClub, new ItemDictionaryEntry() { Name = "Wooden Club", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, PowerTier = 1, Power = 1, ItemType = Listof_ItemTypes.WeaponOneHanded });
+            Data.Add(Listof_InventoryItem.WoodBow, new ItemDictionaryEntry() { Name = "Wooden Bow", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, PowerTier = 1, Power = 1, ItemType = Listof_ItemTypes.WeaponTwoHanded });
+
+
+            //Armor
+            Data.Add(Listof_InventoryItem.StoneHelmet, new ItemDictionaryEntry() { Name = "Wooden Club", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Power = 1, ItemType = Listof_ItemTypes.Headpiece });
+            Data.Add(Listof_InventoryItem.StoneArmor, new ItemDictionaryEntry() { Name = "Wooden Bow", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Power = 1, ItemType = Listof_ItemTypes.Armor });
+            Data.Add(Listof_InventoryItem.StoneShield, new ItemDictionaryEntry() { Name = "Wooden Club", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Power = 1, ItemType = Listof_ItemTypes.Shield });
+            Data.Add(Listof_InventoryItem.StoneRing, new ItemDictionaryEntry() { Name = "Wooden Bow", Value = 10, Weight = 10, DurabilityMax = 100, Durability = 100, Power = 1, ItemType = Listof_ItemTypes.Accessory });
+        }
+    }
+
+    class ResourceDictionary
+    {
+        public Dictionary<Listof_ResourceItem, ResourceDictionaryEntry> Data = new Dictionary<Listof_ResourceItem, ResourceDictionaryEntry>();
+        public ResourceDictionary()
+        {
+            Data.Add(Listof_ResourceItem.Wood, new ResourceDictionaryEntry("Wood", 3, 2));
+            Data.Add(Listof_ResourceItem.Stone, new ResourceDictionaryEntry("Stone", 5, 5));
+            Data.Add(Listof_ResourceItem.Iron, new ResourceDictionaryEntry("Iron", 20, 10));
+            Data.Add(Listof_ResourceItem.Dirt, new ResourceDictionaryEntry("Dirt", 0, 5));
+        }
+    }
+
+
+    class StructureDictionary
+    {
+        public Dictionary<Listof_Structures, StructureDictionaryEntry> Data = new Dictionary<Listof_Structures, StructureDictionaryEntry>();
+        public StructureDictionary()
+        {
+            //Buildables
+            Data.Add(Listof_Structures.Tree1, new StructureDictionaryEntry() { Name = "Tree", Value = 0, Weight = 0, Durability = 12, DropsResource = true, ResourceDrop = new KeyValuePair<int, Listof_ResourceItem>(5, Listof_ResourceItem.Wood) });
+            Data.Add(Listof_Structures.Stone, new StructureDictionaryEntry() { Name = "Stone", Value = 0, Weight = 0, Durability = 20, DropsResource = true, ResourceDrop = new KeyValuePair<int, Listof_ResourceItem>(2, Listof_ResourceItem.Stone) });
+
+            Data.Add(Listof_Structures.StoneThrone, new StructureDictionaryEntry() { Name = "Stone Throne", Value = 100, Weight = 50, Durability = 50 });
+            //Data.Add(Listof_Structures.StoneThrone, new StructureDictionaryEntry() { Name = "Stone Throne", Value = 50, Weight = 50, DurabilityMax = 100, Durability = 100 });
+
+        }
+    }
+
+    class TileDictionary
+    {
+        public Dictionary<Listof_Tile_Type, TileDictionaryEntry> Data = new Dictionary<Listof_Tile_Type, TileDictionaryEntry>();
+        public TileDictionary()
+        {
+            Data.Add(Listof_Tile_Type.Grass, new TileDictionaryEntry() { Sprite = 0, Walkalble = true, Hardness = Listof_MineHardness.Stone });
+            Data.Add(Listof_Tile_Type.Dirt, new TileDictionaryEntry() { Sprite = 2, Walkalble = true, Hardness = Listof_MineHardness.Stone });
         }
     }
 }

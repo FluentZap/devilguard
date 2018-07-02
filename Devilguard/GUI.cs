@@ -14,7 +14,7 @@ namespace Devilguard
     enum UIElement : int
     {
         BackInventory,
-        BackLoadout,
+        BackLoadout,        
         BackCrafting,
         BackBottomBar,
         ButtonCraft
@@ -24,6 +24,7 @@ namespace Devilguard
     {
         None = -1,
         Back,
+        BackLoadout,
         Button,
         Resources,
         Items,
@@ -70,7 +71,7 @@ namespace Devilguard
             InventoryElements.Add((int)UIElement.BackLoadout, new GUIElementType
             {
                 Location = new Rectangle((int)S.X / 2 + 137, (int)S.Y / 2 - 212, 274, 424),
-                Sprite = SD_UI.Back
+                Sprite = SD_UI.BackLoadout
             });
 
             InventoryElements.Add((int)UIElement.BackBottomBar, new GUIElementType
@@ -111,20 +112,53 @@ namespace Devilguard
                     ID++;
                 }
             
-            //AddLoadoutButtons            
+            //AddLoadoutButtons
             ID = 3000;
             p.X = InventoryElements[(int)UIElement.BackLoadout].Location.X;
             p.Y = InventoryElements[(int)UIElement.BackLoadout].Location.Y;
-            for (int y = 0; y < 8; y++)
-                for (int x = 0; x < 6; x++)
-                {
-                    InventoryElements.Add(ID, new GUIElementType
-                    {
-                        Location = new Rectangle(p.X + 27 + 38 * x, p.Y + 66 + 36 * y, 32, 32),
-                        Sprite = SD_UI.Button
-                    });
-                    ID++;
-                }
+            //head
+            InventoryElements.Add(ID, new GUIElementType
+            {
+                Location = new Rectangle(InventoryElements[(int)UIElement.BackLoadout].Location.Center.X - 16, p.Y + 75, 32, 32),
+                Sprite = SD_UI.Button
+            });
+            ID++;
+            //armor
+            InventoryElements.Add(ID, new GUIElementType
+            {
+                Location = new Rectangle(InventoryElements[(int)UIElement.BackLoadout].Location.Center.X - 16, p.Y + 200, 32, 32),
+                Sprite = SD_UI.Button
+            });
+            ID++;
+            //left acc
+            InventoryElements.Add(ID, new GUIElementType
+            {
+                Location = new Rectangle(p.X + (int)(InventoryElements[(int)UIElement.BackLoadout].Location.Width * 0.25) - 16, p.Y + 150, 32, 32),
+                Sprite = SD_UI.Button
+            });
+            ID++;
+            //right acc
+            InventoryElements.Add(ID, new GUIElementType
+            {
+                Location = new Rectangle(p.X + (int)(InventoryElements[(int)UIElement.BackLoadout].Location.Width * 0.75) - 16, p.Y + 150, 32, 32),
+                Sprite = SD_UI.Button
+            });
+            ID++;
+            //left hand
+            InventoryElements.Add(ID, new GUIElementType
+            {
+                Location = new Rectangle(p.X + (int)(InventoryElements[(int)UIElement.BackLoadout].Location.Width * 0.25) - 16, p.Y + 250, 32, 32),
+                Sprite = SD_UI.Button
+            });
+            ID++;
+            //right hand
+            InventoryElements.Add(ID, new GUIElementType
+            {
+                Location = new Rectangle(p.X + (int)(InventoryElements[(int)UIElement.BackLoadout].Location.Width * 0.75) - 16, p.Y + 250, 32, 32),
+                Sprite = SD_UI.Button
+            });
+
+
 
             //AddBarButtons
             ID = 4000;
