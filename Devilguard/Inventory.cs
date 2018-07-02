@@ -27,9 +27,10 @@ namespace Devilguard
         public Listof_InventoryItem item;
         public int Amount;
 
-        public InventoryItem(Listof_InventoryItem i)
+        public InventoryItem(Listof_InventoryItem i, int amount)
         {
             item = i;
+            Amount = amount;
         }
     }    
 
@@ -71,6 +72,17 @@ namespace Devilguard
         //Items
         public bool AddItem(InventoryItem i)
         {
+            //Add amount to stack            
+            for (int x = 0; x < InventorySize; x++)
+                if (Items.ContainsKey(x))
+                {
+                    if (Items[x].item == i.item)
+                    {
+                        Items[x].Amount += i.Amount;
+                        return true;
+                    }                    
+                }
+            //Add new item
             for (int x = 0; x < InventorySize; x++)
             {
                 if (!Items.ContainsKey(x))

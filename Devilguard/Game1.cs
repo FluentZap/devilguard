@@ -39,7 +39,8 @@ namespace Devilguard
         public Point Screen_Size;
         Point MouseDragStart;
         bool MouseDraging;
-        bool MouseClicked;
+        bool LeftMouseClicked;
+        bool RightMouseClicked;
 
         bool InventoryOpen;
         bool InventoryKey;
@@ -145,7 +146,7 @@ namespace Devilguard
                     {                                                
                         ID = Listof_Tile_Type.Grass
                     };                    
-                    if (R.Next(0, 20) == 0)
+                    if (R.Next(0, 10) == 0)
                         tilemap[x, y].Structure = new Structure_Type() { Type = Listof_Structures.Tree1, Durability = C_Structure[Listof_Structures.Tree1].Durability};
                 }
                     
@@ -195,6 +196,7 @@ namespace Devilguard
             Item_Tiles[0] = Content.Load<Texture2D>("Tree");
 
             UI_Textures[(int)SD_UI.Back] = Content.Load<Texture2D>("UI_Back");
+            UI_Textures[(int)SD_UI.BackLoadout] = Content.Load<Texture2D>("UI_Loadout");
             UI_Textures[(int)SD_UI.Button] = Content.Load<Texture2D>("UI_Button");
             UI_Textures[(int)SD_UI.Resources] = Content.Load<Texture2D>("UI_Resources");
             UI_Textures[(int)SD_UI.Items] = Content.Load<Texture2D>("UI_Items");
@@ -311,14 +313,16 @@ namespace Devilguard
             //if (Mouse.GetState().LeftButton == ButtonState.Released)
                 //Player.UsedItem = false;
 
-            if (Mouse.GetState().LeftButton == ButtonState.Pressed) MouseClicked = true;
-
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed) LeftMouseClicked = true;
+            if (Mouse.GetState().RightButton == ButtonState.Pressed) RightMouseClicked = true;
+            
             if (InventoryOpen)
                 UI_CheckInventory();
             else
                 UI_Bar();
 
-            if (Mouse.GetState().LeftButton == ButtonState.Released) MouseClicked = false;
+            if (Mouse.GetState().LeftButton == ButtonState.Released) LeftMouseClicked = false;
+            if (Mouse.GetState().RightButton == ButtonState.Released) RightMouseClicked = false;
 
             if (Screen_Scroll.X < 0) Screen_Scroll.X = 0;
             if (Screen_Scroll.X > GetATSI() * 1000 + Screen_Size.X) Screen_Scroll.X = GetATSI() * 1000 + Screen_Size.X;
@@ -374,6 +378,10 @@ namespace Devilguard
                 if (C_Item[item.item].BuildTile != Listof_Structures.None)
                 {
                     t.Structure = new Structure_Type() { Type = C_Item[item.item].BuildTile, Durability = C_Structure[C_Item[item.item].BuildTile].Durability };
+
+                    item.Amount--;
+                    if (item.Amount <= 0)
+                        Player.Loadout.UsableItems.Remove(Player.SelectedItem);
                 }
             }
         }
@@ -465,7 +473,7 @@ namespace Devilguard
 
 
             Point pos = Mouse.GetState().Position;
-            if (Mouse.GetState().LeftButton == ButtonState.Released && MouseClicked == true)
+            if (Mouse.GetState().LeftButton == ButtonState.Released && LeftMouseClicked == true)
             {
                 foreach (var item in gui.InventoryElements)
                 {
@@ -486,12 +494,11 @@ namespace Devilguard
         {
             Point pos = Mouse.GetState().Position;
 
-            if (Mouse.GetState().LeftButton == ButtonState.Released && MouseClicked == true)
-            {
+            if (Mouse.GetState().LeftButton == ButtonState.Released && LeftMouseClicked == true)
                 foreach(var item in gui.InventoryElements)
-                {
+                    //Crafting Buttons
                     if (item.Value.Location.Contains(pos))
-                    {
+                    { 
                         if (item.Key >= 2000 && item.Key < 3000)
                         {
                             int x = 0;
@@ -506,7 +513,7 @@ namespace Devilguard
 
                                     if (CanCaft)
                                     {
-                                        if (Player.inventory.AddItem(new InventoryItem(bp)))
+                                        if (Player.inventory.AddItem(new InventoryItem(bp, 1)))
                                             foreach (var craftitem in C_Crafting[bp].ResourceCost)
                                                 Player.inventory.RemoveResource(craftitem.Key, craftitem.Value);
                                         
@@ -519,7 +526,7 @@ namespace Devilguard
                                 
                         }
 
-
+                        //Item Buttons
                         if (item.Key >= 1024 && item.Key < 2000)
                         {
                             //Pick up item with empty hand
@@ -543,13 +550,88 @@ namespace Devilguard
                                 //Switch with item in hand
                                 {
                                     InventoryItem temp = Player.inventory.Items[item.Key - 1024];
-                                    Player.inventory.Items[item.Key - 1024] = MouseHeldItem;
-                                    MouseHeldItem = temp;
+                                    if (Player.inventory.Items[item.Key - 1024].item != MouseHeldItem.item)
+                                    {
+                                        Player.inventory.Items[item.Key - 1024] = MouseHeldItem;
+                                        MouseHeldItem = temp;
+                                    }
+                                    else
+                                    {
+                                        Player.inventory.Items[item.Key - 1024].Amount += MouseHeldItem.Amount;
+                                        MouseHeldItem = null;
+                                    }
+                                    
                                 }
                             }
 
                         }
 
+                        //Equipment Panel
+                        if (item.Key >= 3000 && item.Key < 4000)
+                        {
+
+                            //Hand is Empty
+                            if (MouseHeldItem == null)
+                            {
+                                //Space has item
+                                if (Player.Loadout.Equipment[item.Key - 3000] != null)
+                                {
+                                    MouseHeldItem = Player.Loadout.Equipment[item.Key - 3000];
+                                    Player.Loadout.Equipment[item.Key - 3000] = null;
+                                }
+
+
+                            }
+                            else
+                            //Hand has item
+                            {
+                                //Space is empty
+                                if (Player.Loadout.Equipment[item.Key - 3000] == null)
+                                {
+                                    if ((item.Key - 3000 == 0 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Headpiece)
+                                        | (item.Key - 3000 == 1 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Armor)
+                                        | (item.Key - 3000 == 2 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Accessory)
+                                        | (item.Key - 3000 == 3 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Accessory)
+                                        | (item.Key - 3000 == 4 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.WeaponOneHanded)
+                                        | (item.Key - 3000 == 4 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.WeaponTwoHanded)
+                                        | (item.Key - 3000 == 4 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Shield)
+                                        | (item.Key - 3000 == 5 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.WeaponOneHanded)
+                                        | (item.Key - 3000 == 5 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.WeaponTwoHanded)
+                                        | (item.Key - 3000 == 5 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Shield))
+                                    {
+                                        Player.Loadout.Equipment[item.Key - 3000] = new InventoryItem(MouseHeldItem.item, 1);
+                                        MouseHeldItem.Amount--;
+                                        if (MouseHeldItem.Amount <= 0) MouseHeldItem = null;
+                                    }                                        
+                                }
+                                else
+                                //Space has item
+                                {
+                                    if (MouseHeldItem.Amount == 1)
+                                    {
+                                        if ((item.Key - 3000 == 0 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Headpiece)
+                                        | (item.Key - 3000 == 1 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Armor)
+                                        | (item.Key - 3000 == 2 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Accessory)
+                                        | (item.Key - 3000 == 3 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Accessory)
+                                        | (item.Key - 3000 == 4 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.WeaponOneHanded)
+                                        | (item.Key - 3000 == 4 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.WeaponTwoHanded)
+                                        | (item.Key - 3000 == 4 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Shield)
+                                        | (item.Key - 3000 == 5 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.WeaponOneHanded)
+                                        | (item.Key - 3000 == 5 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.WeaponTwoHanded)
+                                        | (item.Key - 3000 == 5 && C_Item[MouseHeldItem.item].ItemType == Listof_ItemTypes.Shield))
+                                        {
+                                            InventoryItem temp = Player.Loadout.Equipment[item.Key - 3000];
+                                            Player.Loadout.Equipment[item.Key - 3000] = MouseHeldItem;
+                                            MouseHeldItem = temp;
+                                        }
+                                    }                                    
+                                }
+
+                            }
+                        }
+                    
+
+                        //Hotbar buttons
                         if (item.Key >= 4000 && item.Key < 5000)
                         {
                             //Hand is Empty
@@ -577,15 +659,166 @@ namespace Devilguard
                                 //Space has item
                                 {
                                     InventoryItem temp = Player.Loadout.UsableItems[item.Key - 4000];
-                                    Player.Loadout.UsableItems[item.Key - 4000] = MouseHeldItem;
-                                    MouseHeldItem = temp;
+                                    if (Player.Loadout.UsableItems[item.Key - 4000].item != MouseHeldItem.item)
+                                    {
+                                        Player.Loadout.UsableItems[item.Key - 4000] = MouseHeldItem;
+                                        MouseHeldItem = temp;
+                                    }
+                                    else
+                                    {
+                                        Player.Loadout.UsableItems[item.Key - 4000].Amount += MouseHeldItem.Amount;
+                                        MouseHeldItem = null;
+                                    }                                    
                                 }
 
                             }                            
                         }
                     }
-                }
-            }
+
+
+            if (Mouse.GetState().RightButton == ButtonState.Released && RightMouseClicked == true)
+                foreach (var item in gui.InventoryElements)
+                    if (item.Value.Location.Contains(pos))
+                    {
+                        if (item.Key >= 2000 && item.Key < 3000)
+                        {
+                            for (int count = 0; count < 5; count++)
+                            {
+                                int x = 0;
+                                foreach (var bp in Player.CraftingBlueprints.Blueprints)
+                                {
+                                    if (x == item.Key - 2000)
+                                    {
+                                        bool CanCaft = true;
+                                        foreach (var craftitem in C_Crafting[bp].ResourceCost)
+                                            if (Player.inventory.ResourceCount(craftitem.Key) < craftitem.Value)
+                                            { CanCaft = false; break; }
+
+                                        if (CanCaft)
+                                        {
+                                            if (Player.inventory.AddItem(new InventoryItem(bp, 1)))
+                                                foreach (var craftitem in C_Crafting[bp].ResourceCost)
+                                                    Player.inventory.RemoveResource(craftitem.Key, craftitem.Value);
+
+                                        }
+                                        break;
+                                    }
+
+                                    x++;
+                                }
+                            }
+                        }
+
+
+                        if (item.Key >= 1024 && item.Key < 2000)
+                        {
+                            //Pick up item with empty hand
+                            if (MouseHeldItem == null)
+                            {
+                                if (Player.inventory.Items.ContainsKey(item.Key - 1024))
+                                {
+                                    int hand, inv;
+                                    decimal start;
+                                    start = Player.inventory.Items[item.Key - 1024].Amount;
+                                    hand = (int)Math.Floor(start / 2.0m);
+                                    inv = (int)Math.Ceiling(start / 2.0m);
+
+                                    MouseHeldItem = new InventoryItem(Player.inventory.Items[item.Key - 1024].item, 0);
+                                    MouseHeldItem.Amount = hand;
+                                    Player.inventory.Items[item.Key - 1024].Amount = inv;
+
+                                    if (MouseHeldItem.Amount <= 0) MouseHeldItem = null;
+
+                                    if (Player.inventory.Items[item.Key - 1024].Amount <= 0)
+                                        Player.inventory.Items.Remove(item.Key - 1024);
+                                }
+                            }
+                            else
+                            {
+                                //Drop item to empty slot
+                                if (!Player.inventory.Items.ContainsKey(item.Key - 1024))
+                                {
+                                    Player.inventory.Items[item.Key - 1024] = new InventoryItem(MouseHeldItem.item, 1);
+                                    MouseHeldItem.Amount--;
+                                    if (MouseHeldItem.Amount <= 0) MouseHeldItem = null;
+                                }
+                                else
+                                //Switch with item in hand
+                                {
+                                    InventoryItem temp = Player.inventory.Items[item.Key - 1024];
+                                    if (Player.inventory.Items[item.Key - 1024].item != MouseHeldItem.item)
+                                    {
+                                        Player.inventory.Items[item.Key - 1024] = MouseHeldItem;
+                                        MouseHeldItem = temp;
+                                    }
+                                    else
+                                    {
+                                        Player.inventory.Items[item.Key - 1024].Amount++;
+                                        MouseHeldItem.Amount--;
+                                        if (MouseHeldItem.Amount <= 0) MouseHeldItem = null;                                        
+                                    }
+                                }
+                            }
+
+                        }
+
+                        if (item.Key >= 4000 && item.Key < 5000)
+                        {
+                            //Hand is Empty
+                            if (MouseHeldItem == null)
+                            {
+                                //Space has item
+                                if (Player.Loadout.UsableItems.ContainsKey(item.Key - 4000))
+                                {
+                                    InventoryItem BItem = Player.Loadout.UsableItems[item.Key - 4000];
+                                    int hand, inv;
+                                    decimal start;
+                                    start = BItem.Amount;
+                                    hand = (int)Math.Floor(start / 2.0m);
+                                    inv = (int)Math.Ceiling(start / 2.0m);
+
+                                    MouseHeldItem = new InventoryItem(BItem.item, 0);
+                                    MouseHeldItem.Amount = hand;
+                                    BItem.Amount = inv;
+
+                                    if (MouseHeldItem.Amount <= 0) MouseHeldItem = null;
+
+                                    if (BItem.Amount <= 0)
+                                        Player.Loadout.UsableItems.Remove(item.Key - 4000);                                                                  
+                                }
+                            }
+                            else
+                            //Hand has item
+                            {
+                                //Space is empty
+                                if (!Player.Loadout.UsableItems.ContainsKey(item.Key - 4000))
+                                {                                    
+                                    Player.Loadout.UsableItems.Add(item.Key - 4000, new InventoryItem(MouseHeldItem.item, 1));
+                                    MouseHeldItem.Amount--;
+                                    if (MouseHeldItem.Amount <= 0) MouseHeldItem = null;                                    
+                                }
+                                else
+                                //Space has item
+                                {
+                                    InventoryItem temp = Player.Loadout.UsableItems[item.Key - 4000];
+                                    if (Player.Loadout.UsableItems[item.Key - 4000].item != MouseHeldItem.item)
+                                    {
+                                        Player.Loadout.UsableItems[item.Key - 4000] = MouseHeldItem;
+                                        MouseHeldItem = temp;
+                                    }
+                                    else
+                                    {
+                                        Player.Loadout.UsableItems[item.Key - 4000].Amount++;
+                                        MouseHeldItem.Amount--;
+                                        if (MouseHeldItem.Amount <= 0) MouseHeldItem = null;
+                                    }                                 
+                                }
+
+                            }
+                        }
+                    }
+
+
         }
 
 
@@ -649,10 +882,7 @@ namespace Devilguard
                     //spriteBatch.Draw(Background_Tiles[tilemap[x, y]], new Rectangle(pos.X, pos.Y, 64, 64), Color.White);
                 }
 
-            spriteBatch.Draw(Actor_Sprites[0], new Rectangle((int)(Player.Location.X * Screen_Zoom - Screen_Scroll.X), (int)(Player.Location.Y * Screen_Zoom - Screen_Scroll.Y), GetATSI(), GetATSI()), Color.White);
-                       
-
-                Rectangle sbox = new Rectangle(Player.Reach.Location + Player.getTile(), Player.Reach.Size);
+            Rectangle sbox = new Rectangle(Player.Reach.Location + Player.getTile(), Player.Reach.Size);
             if (sbox.Contains(SelectedTile))
             {
                 pos.X = SelectedTile.X * GetATSI() - Screen_Scroll.X;
@@ -661,6 +891,10 @@ namespace Devilguard
                 spriteBatch.Draw(UI_Textures[(int)SD_UI.SelectBox], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), Color.White);
             }
 
+            spriteBatch.Draw(Actor_Sprites[0], new Rectangle((int)(Player.Location.X * Screen_Zoom - Screen_Scroll.X), (int)(Player.Location.Y * Screen_Zoom - Screen_Scroll.Y), GetATSI(), GetATSI()), Color.White);
+
+
+            
 
             
 
@@ -672,10 +906,10 @@ namespace Devilguard
             if (MouseHeldItem != null)
             {
                 Point p;
-                p.X = Mouse.GetState().Position.X;
-                p.Y = Mouse.GetState().Position.Y;
+                p.X = Mouse.GetState().Position.X - 16;
+                p.Y = Mouse.GetState().Position.Y - 16;
                 spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X, p.Y, 32, 32), new Rectangle((int)MouseHeldItem.item * 32, 0, 32, 32), Color.White);
-
+                spriteBatch.DrawString(basicfont, MouseHeldItem.Amount.ToString(), new Vector2(p.X, p.Y), Color.White);
             }
             
 
@@ -695,7 +929,7 @@ namespace Devilguard
                 for (int x = 4000; x < 4010; x++)
                 {
                     if (gui.InventoryElements[x].Sprite != SD_UI.None)
-                        spriteBatch.Draw(UI_Textures[(int)gui.InventoryElements[x].Sprite], gui.InventoryElements[x].Location, gui.InventoryElements[x].color);
+                        spriteBatch.Draw(UI_Textures[(int)gui.InventoryElements[x].Sprite], gui.InventoryElements[x].Location, gui.InventoryElements[x].color);                        
                 }
             }
                 
@@ -718,6 +952,7 @@ namespace Devilguard
 
                     spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 6 + 72 * xpos, p.Y + 12, 64, 64), c);
                     spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 6 + 72 * xpos, p.Y + 12, 64, 64), new Rectangle((int)item.item * 32, 0, 32, 32), c);
+                    spriteBatch.DrawString(basicfont, item.Amount.ToString(), new Vector2(p.X + 6 + 72 * xpos, p.Y + 12), Color.White);
                 }
                 xpos++;
             }
@@ -761,10 +996,10 @@ namespace Devilguard
                 if (Player.inventory.Items.ContainsKey(x))
                 {
                     var item = Player.inventory.Items[x];
-                    
+
                     spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), Color.White);
                     spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), new Rectangle((int)item.item * 32, 0, 32, 32), Color.White);
-                    //spriteBatch.DrawString(basicfont, itemDictionary.Data[item.Value.item].Name, new Vector2(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos), Color.White);                
+                    spriteBatch.DrawString(basicfont, item.Amount.ToString(), new Vector2(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos), Color.White);                
 
                     //spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Value * item.Value).ToString() + "gp", new Vector2(p.X + 55 + 42 * xpos, p.Y + 114 + 42 * ypos), Color.White);
                     //spriteBatch.DrawString(basicfont, (resourceDictionary.Data[item.Key].Weight * item.Value).ToString() + "wt", new Vector2(p.X + 55 + 42 * xpos, p.Y + 146 + 42 * ypos), Color.White);
@@ -773,6 +1008,8 @@ namespace Devilguard
                 if (xpos >= width)
                 { xpos = 0; ypos++; }
             }
+
+            DrawInventoryEquipment();
 
             width = 6;
             xpos = 0;
@@ -810,6 +1047,26 @@ namespace Devilguard
         }
         
 
+
+
+        void DrawInventoryEquipment()
+        {
+            for (int x = 0; x < 6; x++)
+            {
+
+                if (Player.Loadout.Equipment[x] != null)
+                {
+                    {
+                        var item = Player.Loadout.Equipment[x];
+                        //spriteBatch.Draw(UI_Textures[(int)SD_UI.Button], new Rectangle(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos, 32, 32), Color.White);
+                        spriteBatch.Draw(UI_Textures[(int)SD_UI.Items], gui.InventoryElements[3000 + x].Location, new Rectangle((int)item.item * 32, 0, 32, 32), Color.White);
+                        //spriteBatch.DrawString(basicfont, item.Amount.ToString(), new Vector2(p.X + 27 + 38 * xpos, p.Y + 66 + 36 * ypos), Color.White);                    
+                    }
+                }
+
+
+            }            
+        }
 
     }
 }
