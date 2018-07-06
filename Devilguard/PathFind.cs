@@ -80,8 +80,8 @@ namespace Devilguard
         Catalog Data;
 
         Rectangle MapRect;
-        public LinkedList<Point> Path = new LinkedList<Point>();
-
+        //public LinkedList<Point> Path = new LinkedList<Point>();
+        public List<Point> Path = new List<Point>();
         public PathFind(Tile_Type[,] Map, Rectangle Rect, Catalog catalog)
         {
             Tile_Map = Map;
@@ -128,14 +128,17 @@ namespace Devilguard
                 Calculate_Node(Node);
                 CloseList.Add(Node.Pos);
 
+                //Add items to found Node
                 if (Found_State == PFState.Found)
                 {
                     Node ListNode = List[End_Point];
+                    int index;
                     while (ListNode != null)
                     {
-                        Path.AddFirst(ListNode.Pos);
+                        Path.Add(ListNode.Pos);
                         ListNode = ListNode.Parent;
                     }
+                    Path.Reverse();
                 }
                 return PFState.NotFinished;
             }
@@ -189,6 +192,7 @@ namespace Devilguard
                         {
                             if (!CloseList.Contains(new Point(x, y)))
                             {
+                                //Standard cost of a tile
                                 int G_Add = 10;
                                 int H;
                                 bool SetNode = true;
@@ -196,7 +200,8 @@ namespace Devilguard
 
                                 if (x != Pos.X && y != Pos.Y)
                                 {
-                                    G_Add = 14;
+                                    //Cost of Diagnals
+                                    G_Add = 14;                                    
                                     //Not Walkable
                                     if (!Tile_Map[Pos.X, y].Walkable(Data))
                                         SetNode = false;

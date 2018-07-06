@@ -1,0 +1,194 @@
+Combat Mode
+
+Stats
+	Race		Set's Base Stats
+	Level		Adds amount in base stats	
+	Class		Adds Multiplier to stats
+	Kingdom		Further adds stats
+	
+	
+	
+	
+
+Increased Equipment/Rooms/Research/Artifacts/Building
+Vigor		HP
+Will		MP
+
+Mind		SpecialAttack
+Body		Attack
+Speed		Speed
+
+
+
+
+
+
+Starts and gives combat order on list.
+Starts with the first.
+
+
+At max speed will start initiative first.
+stats go from 1 to 100
+
+
+
+
+
+
+Damage Types
+Slash
+Blunt
+Pierce
+
+Fire
+Cold
+Dark
+Lightning
+Holy
+
+
+
+
+
+
+
+
+
+
+
+
+40		25
+50		20
+
+
+
+
+
+
+
+
+CLASSES@@!!@@!!
+
+
+
+
+Main Character starts as a base class
+
+
+
+
+
+Outlaws
+Dead Guys
+Devil Boys
+
+
+
+
+
+
+Thieves
+Archers
+Mages
+Summoners
+Swordsmen
+
+
+Basic Magic			Medicus
+Basic Strength		Solider/Trooper/Infantry
+Basic Stealth		Light foot
+
+
+Magic
+	Magic Damage
+	Healers
+	Utility
+	Summoners
+
+Strength
+	Tanks
+	DPS
+	Range/Archers
+	Resistant
+
+Stealth
+	Utility/Stealing holding gear getting around
+	Stealth
+	Status Effects
+
+	
+	
+Abilities a character has is based on Race, Class, Weapons.
+
+Race can be changed/upgraded to ad perks and abilities.
+
+
+Some Class skills are augmented by Racial Abilities( ie extra damage, or damage of a type)
+
+Basic Class Layout
+Skills		Expanded by buildings and quality of the buildings. Add perks to individual skills/abilities.
+
+
+
+Class can attack with weapon in hand.
+They can use the Primary Class and Secondary Class.
+Each room can hold a limited number of primary and secondary classes. (IE 1 primary, 1 Secondary)
+
+
+Each Class Has a List of armor and weapons it can wear.
+Types or Equipment
+Light Armor
+
+
+
+Boons/Banes
+Shield		+20% Protection
+Focused		+20% Power
+Rend Armors	-20% Protection
+QuickFoot	+4 	 Movement
+
+
+Trooper
+Can Equip
+	Light Armors
+	Light Helmets
+	ShortSwords
+	Pikes
+	Shields
+	ShortBows
+	
+Skills	
+	Defensive Strike		Attack for -20% damage but Shield for 1 turn,
+	SlingShot				3 Ranged attack, Does small damage.
+	Focus Power				+20% power for 4 turns
+	MultiAttack				-60% power but can attack twice
+	
+	
+
+	
+Light Foot
+Can Equip
+	Cloth
+	Hats
+	Daggers
+
+Passives
+	Has a chance to steal item's/coin when attacking.	
+Skills	
+	Prepare Strike			Next attack does +100% damage
+	Find Weakness			-80% Damage and rend armor for 4 turns
+	Assassinate				+100% damage if target is at full health
+	Back Off				Move back one space and strike at the same time, uses movement
+	
+	
+Medicus
+Can Equip
+	Cloth
+	Hats
+	Staffs
+
+Skills	
+	PowderCharge			Fire damage in radius
+	Speed Tonic				Gives Character QuickFoot
+	Ki Rush					Pushes a character 2 spaces.
+	Recover					Heal a small amount of HP/MP

@@ -97,6 +97,16 @@ namespace Devilguard
 
 
 
+    public enum Listof_Classes : int
+    {
+        Empty,
+        Medicus,
+        Trooper,
+        Lightfoot
+    };
+
+
+
     class Catalog
     {
         public StructureDictionary structure = new StructureDictionary();
@@ -104,6 +114,7 @@ namespace Devilguard
         public ResourceDictionary resource = new ResourceDictionary();
         public ItemDictionary item = new ItemDictionary();
         public TileDictionary tile = new TileDictionary();
+        public ClassDictionary classes = new ClassDictionary();
     }        
 
 
@@ -146,7 +157,17 @@ namespace Devilguard
         public Listof_MineHardness Hardness;
     }
 
-    
+
+    //Class Dictionary
+    class ClassDictionaryEntry
+    {
+        public string Name;
+        public string Skills;        
+
+
+
+    }
+
 
 
 
@@ -293,6 +314,28 @@ namespace Devilguard
             Data.Add(Listof_ResourceItem.Stone, new ResourceDictionaryEntry("Stone", 5, 5));
             Data.Add(Listof_ResourceItem.Iron, new ResourceDictionaryEntry("Iron", 20, 10));
             Data.Add(Listof_ResourceItem.Dirt, new ResourceDictionaryEntry("Dirt", 0, 5));
+        }
+    }
+
+
+    class ClassDictionary
+    {
+        public Dictionary<Listof_Classes, ClassDictionaryEntry> Data = new Dictionary<Listof_Classes, ClassDictionaryEntry>();
+        public ClassDictionary()
+        {
+            Data.Add(Listof_Classes.Medicus, new ClassDictionaryEntry()
+            {
+                Skills = "Medican"
+            });
+            Data.Add(Listof_Classes.Trooper, new ClassDictionaryEntry()
+            {
+                Skills = "Tactics"
+            });
+            Data.Add(Listof_Classes.Lightfoot, new ClassDictionaryEntry()
+            {
+                Skills = "Scheme"
+            });
+
         }
     }
 
