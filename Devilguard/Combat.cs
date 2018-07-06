@@ -14,7 +14,7 @@ namespace Devilguard
     class Combat_Slot
     {
         public Actor_Type Actor;
-        public int Initiative;
+        public int Initiative;        
 
         public Combat_Slot(Actor_Type actor, int initiative)
         {
@@ -25,11 +25,21 @@ namespace Devilguard
 
     }
 
+    enum Listof_MoveMode
+    {
+        Off,
+        Waitingforcommand,
+        Moving
+    }
+
+
     class Combat
     {
         public List<Combat_Slot> InitiativeList = new List<Combat_Slot>();
         public Actor_Type CurrentTurn;
         public bool Advancing;
+
+        public Listof_MoveMode MoveMode;
 
         public void AdvanceToTurn()
         {            

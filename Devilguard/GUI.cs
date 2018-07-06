@@ -23,10 +23,10 @@ namespace Devilguard
     enum UICombatElement : int
     {
         BackInitiative,
-        BackLoadout,
-        BackCrafting,
-        BackBottomBar,
-        ButtonCraft
+        BackActions,
+        Action_Skill1,
+        Action_Skill2,        
+        Action_Move        
     }
 
     enum SD_UI : int
@@ -77,8 +77,30 @@ namespace Devilguard
                 Location = new Rectangle(0, (int)S.Y - 200, (int)S.X, 200),
                 Sprite = SD_UI.Back
             });
+            
+            CombatElements.Add((int)UICombatElement.BackActions, new GUIElementType
+            {
+                Location = new Rectangle(0, (int)S.Y / 2 - 200, 200, 400),
+                Sprite = SD_UI.Back
+            });
 
+            CombatElements.Add((int)UICombatElement.Action_Skill1, new GUIElementType
+            {
+                Location = new Rectangle(0, (int)S.Y / 2 - 180, 200, 60),
+                Sprite = SD_UI.Button
+            });
 
+            CombatElements.Add((int)UICombatElement.Action_Skill2, new GUIElementType
+            {
+                Location = new Rectangle(0, (int)S.Y / 2 - 100, 200, 60),
+                Sprite = SD_UI.Button
+            });
+
+            CombatElements.Add((int)UICombatElement.Action_Move, new GUIElementType
+            {
+                Location = new Rectangle(0, (int)S.Y / 2 - 20, 200, 60),
+                Sprite = SD_UI.Button
+            });
         }
 
 
