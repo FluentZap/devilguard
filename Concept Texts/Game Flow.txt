@@ -37,7 +37,6 @@ FFT style combat on the map.
 Starts when one side sees another. Then the fog goes away and the teams fight.
 
 Fight and kill Creatures
-
 Build a Throne Room
 
 Will only let the player build rooms in enclosed buildings.

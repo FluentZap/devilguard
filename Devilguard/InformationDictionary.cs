@@ -44,7 +44,18 @@ namespace Devilguard
     class Tile_Type
     {
         public Listof_Tile_Type ID;
-        public Structure_Type Structure;        
+        public int Occupied = -1;
+        public Structure_Type Structure;
+
+        public bool Walkable(Catalog c)
+        {
+            if (Occupied == -1 && c.tile.Data[ID].Walkalble)
+                if (Structure == null || c.structure.Data[Structure.Type].Walkalble)
+                    return true;
+            return false;
+        }
+
+
     }
 
 
@@ -292,8 +303,8 @@ namespace Devilguard
         public StructureDictionary()
         {
             //Buildables
-            Data.Add(Listof_Structures.Tree1, new StructureDictionaryEntry() { Name = "Tree", Value = 0, Weight = 0, Durability = 12, DropsResource = true, ResourceDrop = new KeyValuePair<int, Listof_ResourceItem>(5, Listof_ResourceItem.Wood) });
-            Data.Add(Listof_Structures.Stone, new StructureDictionaryEntry() { Name = "Stone", Value = 0, Weight = 0, Durability = 20, DropsResource = true, ResourceDrop = new KeyValuePair<int, Listof_ResourceItem>(2, Listof_ResourceItem.Stone) });
+            Data.Add(Listof_Structures.Tree1, new StructureDictionaryEntry() { Name = "Tree", Value = 0, Weight = 0, Durability = 12, Walkalble = false, DropsResource = true, ResourceDrop = new KeyValuePair<int, Listof_ResourceItem>(5, Listof_ResourceItem.Wood) });
+            Data.Add(Listof_Structures.Stone, new StructureDictionaryEntry() { Name = "Stone", Value = 0, Weight = 0, Durability = 20, Walkalble = false, DropsResource = true, ResourceDrop = new KeyValuePair<int, Listof_ResourceItem>(2, Listof_ResourceItem.Stone) });
 
             Data.Add(Listof_Structures.StoneThrone, new StructureDictionaryEntry() { Name = "Stone Throne", Value = 100, Weight = 50, Durability = 50 });
             //Data.Add(Listof_Structures.StoneThrone, new StructureDictionaryEntry() { Name = "Stone Throne", Value = 50, Weight = 50, DurabilityMax = 100, Durability = 100 });

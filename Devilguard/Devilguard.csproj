@@ -43,10 +43,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Actor_Type.cs" />
+    <Compile Include="Combat.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="GUI.cs" />
     <Compile Include="InformationDictionary.cs" />
     <Compile Include="Inventory.cs" />
+    <Compile Include="PathFind.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -9,9 +9,8 @@ using System;
 using System.Collections.Generic;
 
 namespace Devilguard
-{
+{    
 
-       
 
     /// <summary>
     /// This is the main type for your game.
@@ -20,6 +19,8 @@ namespace Devilguard
 
     public class Game1 : Game
     {
+        static float DIAGONAL_SPEED_MODIFIER = 0.70710678118654757F;
+
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         SpriteFont basicfont;
@@ -47,7 +48,41 @@ namespace Devilguard
 
         InventoryItem MouseHeldItem;
         Point SelectedTile;
+        Point LastSelectedTile;
+
         bool TileInReach;
+        Combat currentCombat = new Combat();
+
+        PathFind pathfind;
+        bool RecalculatePF = true;
+
+
+        LinkedList<Point> path;
+
+        Dictionary<int, Actor_Type> ActorList = new Dictionary<int, Actor_Type>();
+
+
+        public enum Listof_KeyStatus
+        {            
+            Down,
+            Handled
+        }
+
+
+
+        public Dictionary<Keys, Listof_KeyStatus> PressedKeys = new Dictionary<Keys, Listof_KeyStatus>();
+
+
+        public enum Listof_GameMode
+        {
+            Personal,
+            Combat,
+            Strategy
+        }
+
+        public Listof_GameMode GameMode;
+
+
 
         static Catalog catalog = new Catalog();
 
@@ -101,7 +136,7 @@ namespace Devilguard
         void Move_Actor_Step(Actor_Type A, Direction D, float amount)
         {
             RectangleF Box = A.Hitbox;
-            Box.Offset(A.Location.ToVector2());
+            //Box.Offset(A.Location.ToVector2());
         }
 
         float GetATSF()
@@ -160,15 +195,43 @@ namespace Devilguard
                     
 
             Screen_Zoom = 2.0f;
-            Player.Hitbox = new Rectangle(13, 9, 6, 23);
+
+            pathfind = new PathFind(tilemap, new Rectangle(0, 0, 999, 999), catalog);
+
+
+            Player.Hitbox = new Rectangle(7, 2, 18, 29);
             Player.inventory.AddResource(Listof_ResourceItem.Wood, 500);
             Player.inventory.AddResource(Listof_ResourceItem.Stone, 500);
+            Player.Stats.Speed = 5;
             //Player.Loadout.UsableItems[0] = new InventoryEntry(InventoryItem.WoodClub);
             //Player.Loadout.UsableItems[1] = new InventoryEntry(InventoryItem.WoodBow);
             //Player.Loadout.UsableItems[3] = new InventoryEntry(InventoryItem.WoodAxe);
             //Player.inventory.AddItem(Item.Iron, 30);
 
             //Player.inventory.AddItem(new InventoryEntry(InventoryItem.WoodHoe));
+
+
+            ActorList.Add(0, Player);
+            Player.Stats.Speed = 9;
+            ActorList.Add(1, new Actor_Type());
+            ActorList.Add(2, new Actor_Type());
+            ActorList.Add(3, new Actor_Type());
+
+            ActorList[1].Stats.Speed = 10; ActorList[1].Sprite = 1;
+            ActorList[2].Stats.Speed = 8;  ActorList[2].Sprite = 2;
+            ActorList[3].Stats.Speed = 12; ActorList[3].Sprite = 3;
+
+            ActorList[1].Location = new Point(10 * 32, 4 * 32);
+            ActorList[2].Location = new Point(2 * 32, 2 * 32);
+            ActorList[3].Location = new Point(7 * 32, 7 * 32);
+
+            currentCombat.InitiativeList.Add(new Combat_Slot(ActorList[0], 0));
+            currentCombat.InitiativeList.Add(new Combat_Slot(ActorList[1], 0));
+            currentCombat.InitiativeList.Add(new Combat_Slot(ActorList[2], 0));
+            currentCombat.InitiativeList.Add(new Combat_Slot(ActorList[3], 0));
+
+            currentCombat.AdvanceToTurn();
+            Combat_Block_Tiles();
 
             for (int x = 0; x < Enum.GetNames(typeof(Listof_InventoryItem)).Length; x++)
                 Player.CraftingBlueprints.AddBlueprint((Listof_InventoryItem)x);
@@ -192,7 +255,7 @@ namespace Devilguard
         {
             // Create a new SpriteBatch, which can be used to draw textures.            
             Background_Tiles[0] = Content.Load<Texture2D>("BackTileMap");
-            Actor_Sprites[0] = Content.Load<Texture2D>("King_0");
+            Actor_Sprites[0] = Content.Load<Texture2D>("ActorSprites");
             Item_Tiles[0] = Content.Load<Texture2D>("Tree");
 
             UI_Textures[(int)SD_UI.Back] = Content.Load<Texture2D>("UI_Back");
@@ -228,9 +291,121 @@ namespace Devilguard
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-            float speed = 0.5f * gameTime.ElapsedGameTime.Milliseconds;
+
+            SelectedTile = (Mouse.GetState().Position + Screen_Scroll) / new Point(GetATSI(), GetATSI());
+
+            for (int x = 0; x < Enum.GetNames(typeof(Keys)).Length; x++)
+            {
+                if (Keyboard.GetState().IsKeyDown((Keys)x))
+                    if (!PressedKeys.ContainsKey((Keys)x))
+                        PressedKeys.Add((Keys)x, Listof_KeyStatus.Down);
+
+                if (Keyboard.GetState().IsKeyUp((Keys)x))
+                    if (PressedKeys.ContainsKey((Keys)x) && PressedKeys[(Keys)x] == Listof_KeyStatus.Handled)
+                        PressedKeys.Remove((Keys)x);
+            }
 
 
+
+
+
+            if (PressedKeys.ContainsKey(Keys.Tab) && PressedKeys[Keys.Tab] == Listof_KeyStatus.Down)
+            {
+                PressedKeys[Keys.Tab] = Listof_KeyStatus.Handled;
+                if (GameMode == Listof_GameMode.Personal)
+                    GameMode = Listof_GameMode.Combat;
+                else
+                    GameMode = Listof_GameMode.Personal;
+            }
+
+
+            if (PressedKeys.ContainsKey(Keys.P) && PressedKeys[Keys.P] == Listof_KeyStatus.Down)
+            {
+                PressedKeys[Keys.P] = Listof_KeyStatus.Handled;
+                currentCombat.AdvanceToTurn();
+                Combat_Block_Tiles();
+                RecalculatePF = true;
+            }
+
+
+
+            switch (GameMode)
+            {
+                case Listof_GameMode.Personal:
+                    UI_Personal_Mode();
+                    break;
+                case Listof_GameMode.Combat:
+                    UI_Combat_Mode();                                       
+                    break;
+                case Listof_GameMode.Strategy:
+                    break;
+            }
+
+            RunScripts();
+
+            UI_MouseDrag();                                              
+            
+            //Safeguards
+            if (Screen_Zoom < 1.0f) Screen_Zoom = 1.0f;
+            if (Screen_Zoom > 4.0f) Screen_Zoom = 4.0f;
+
+            //if (Screen_Scroll.X < 0) Screen_Scroll.X = 0;
+            //if (Screen_Scroll.X > GetATSI() * 1000 + Screen_Size.X) Screen_Scroll.X = GetATSI() * 1000 + Screen_Size.X;
+
+            //if (Screen_Scroll.Y < 0) Screen_Scroll.Y = 0;
+            //if (Screen_Scroll.Y > GetATSI() * 1000 + Screen_Size.Y) Screen_Scroll.Y = GetATSI() * 1000 + Screen_Size.Y;
+
+            base.Update(gameTime);
+        }
+
+
+        void RunScripts()
+        {
+            bool advance = true;
+            foreach(var a in ActorList)
+            {
+                if (a.Value.MoveQueue.Count > 0 )
+                {
+                    advance = false;
+                    Point dest = a.Value.MoveQueue.Peek();
+                    Point2 m = new Point2();
+                    if (a.Value.Location.X < dest.X) m.X = 2f;
+                    if (a.Value.Location.X > dest.X) m.X = -2f;
+                    if (a.Value.Location.Y < dest.Y) m.Y = 2f;
+                    if (a.Value.Location.Y > dest.Y) m.Y = -2f;
+
+                    if (m.X != 0 && m.Y != 0)
+                    {
+                        m.X *= DIAGONAL_SPEED_MODIFIER;
+                        m.Y *= DIAGONAL_SPEED_MODIFIER;
+                    }
+
+                    if (Math.Abs(a.Value.Location.X - dest.X) <= m.X)
+                        a.Value.Location.X = dest.X;
+                    else
+                        a.Value.Location.X += m.X;
+
+                    if (Math.Abs(a.Value.Location.Y - dest.Y) <= m.Y)
+                        a.Value.Location.Y = dest.Y;
+                    else
+                        a.Value.Location.Y += m.Y;
+
+                    if (a.Value.Location.X == dest.X && a.Value.Location.Y == dest.Y)
+                        a.Value.MoveQueue.Dequeue();
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
+        void UI_Personal_Mode()
+        {            
             if (Keyboard.GetState().IsKeyDown(Keys.W))
                 Player.Location.Y -= 1;
             if (Keyboard.GetState().IsKeyDown(Keys.S))
@@ -240,23 +415,6 @@ namespace Devilguard
             if (Keyboard.GetState().IsKeyDown(Keys.D))
                 Player.Location.X += 1;
 
-            /*
-            if (Keyboard.GetState().IsKeyDown(Keys.W))
-                Player.Location += 5;
-                Screen_Scroll.Y -= 10;
-            if (Keyboard.GetState().IsKeyDown(Keys.S))
-                Screen_Scroll.Y += 10;
-            if (Keyboard.GetState().IsKeyDown(Keys.A))
-                Screen_Scroll.X -= 10;
-            if (Keyboard.GetState().IsKeyDown(Keys.D))
-                Screen_Scroll.X += 10;
-            */
-
-            //if (Keyboard.GetState().IsKeyDown(Keys.Q))
-            //Screen_Zoom -= 0.1f;
-
-            //if (Keyboard.GetState().IsKeyDown(Keys.E))           
-            //    Screen_Zoom += 0.1f;                
 
             if (Keyboard.GetState().IsKeyUp(Keys.E))
                 InventoryKey = false;
@@ -271,30 +429,6 @@ namespace Devilguard
                     InventoryKey = true;
                 }
 
-                
-
-
-            // TODO: Add your update logic here
-
-            if (Screen_Zoom < 1.0f) Screen_Zoom = 1.0f;
-            if (Screen_Zoom > 4.0f) Screen_Zoom = 4.0f;
-
-            if (Mouse.GetState().RightButton == ButtonState.Pressed)
-            {
-                if (!MouseDraging)
-                {
-                    MouseDraging = true;
-                    MouseDragStart = Screen_Scroll + Mouse.GetState().Position;
-                }           
-            }
-            if (MouseDraging)
-            {
-                Screen_Scroll = (MouseDragStart - Mouse.GetState().Position);
-                if (Mouse.GetState().RightButton != ButtonState.Pressed) MouseDraging = false;
-            }
-
-            Point sel_pos = (Mouse.GetState().Position + Screen_Scroll) / new Point(GetATSI(), GetATSI());
-            SelectedTile = sel_pos;
 
             TileInReach = false;
             if (new Rectangle(Player.Reach.Location + Player.getTile(), Player.Reach.Size).Contains(SelectedTile))
@@ -306,16 +440,12 @@ namespace Devilguard
                 Player.UsedItem = false;
 
 
-
-                if (!InventoryOpen)
+            if (!InventoryOpen)
                 UI_PersonalHandleMouse();
-
-            //if (Mouse.GetState().LeftButton == ButtonState.Released)
-                //Player.UsedItem = false;
 
             if (Mouse.GetState().LeftButton == ButtonState.Pressed) LeftMouseClicked = true;
             if (Mouse.GetState().RightButton == ButtonState.Pressed) RightMouseClicked = true;
-            
+
             if (InventoryOpen)
                 UI_CheckInventory();
             else
@@ -323,27 +453,68 @@ namespace Devilguard
 
             if (Mouse.GetState().LeftButton == ButtonState.Released) LeftMouseClicked = false;
             if (Mouse.GetState().RightButton == ButtonState.Released) RightMouseClicked = false;
-
-            if (Screen_Scroll.X < 0) Screen_Scroll.X = 0;
-            if (Screen_Scroll.X > GetATSI() * 1000 + Screen_Size.X) Screen_Scroll.X = GetATSI() * 1000 + Screen_Size.X;
-
-            if (Screen_Scroll.Y < 0) Screen_Scroll.Y = 0;
-            if (Screen_Scroll.Y > GetATSI() * 1000 + Screen_Size.Y) Screen_Scroll.Y = GetATSI() * 1000 + Screen_Size.Y;
-            //if (Screen_Scroll.Y * 1000 > Screen_Size.X) Screen_Scroll.Y = Screen_Size.Y;
-
-            base.Update(gameTime);
         }
 
+
+        void UI_Combat_Mode()
+        {
+
+            if (SelectedTile.X >= 0 && SelectedTile.Y >= 0 && SelectedTile.X <= 1000 && SelectedTile.Y <= 1000 && (SelectedTile != LastSelectedTile || RecalculatePF))
+            {
+                Point p = currentCombat.CurrentTurn.getTile();
+                pathfind.Standard_Pathfind(p, SelectedTile, 20);
+                LastSelectedTile = SelectedTile;
+                RecalculatePF = false;
+                if (pathfind.Found_State == PFState.Found)
+                {
+                    path = pathfind.Path;
+                }
+            }
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed) LeftMouseClicked = true;
+            if (Mouse.GetState().RightButton == ButtonState.Pressed) RightMouseClicked = true;
+
+            if (Mouse.GetState().LeftButton == ButtonState.Released && LeftMouseClicked == true && path.Count != 0  && SelectedTile == path.Last.Value)
+            {
+                Point p = currentCombat.CurrentTurn.getTile();                
+                foreach (var item in path)
+                {
+                    tilemap[p.X, p.Y].Occupied = -1;
+                    currentCombat.CurrentTurn.MoveQueue.Enqueue(item * new Point(32, 32));
+                }
+            }
+
+            if (Mouse.GetState().LeftButton == ButtonState.Released) LeftMouseClicked = false;
+            if (Mouse.GetState().RightButton == ButtonState.Released) RightMouseClicked = false;
+
+        }
+
+
+        void UI_MouseDrag()
+        {
+            if (Mouse.GetState().RightButton == ButtonState.Pressed)
+            {
+                if (!MouseDraging)
+                {
+                    MouseDraging = true;
+                    MouseDragStart = Screen_Scroll + Mouse.GetState().Position;
+                }
+            }
+
+            if (MouseDraging)
+            {
+                Screen_Scroll = (MouseDragStart - Mouse.GetState().Position);
+                if (Mouse.GetState().RightButton != ButtonState.Pressed) MouseDraging = false;
+            }
+        }
 
 
         void UI_PersonalHandleMouse()
         {
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
-                Point sel_pos = (Mouse.GetState().Position + Screen_Scroll) / new Point(GetATSI(), GetATSI());
-                SelectedTile = sel_pos;
-                Tile_Type t = tilemap[sel_pos.X, sel_pos.Y];
-                if (sel_pos.X >= 0 && sel_pos.X <= 1000 && sel_pos.Y >= 0 && sel_pos.Y <= 1000 && TileInReach)
+                
+                Tile_Type t = tilemap[SelectedTile.X, SelectedTile.Y];
+                if (SelectedTile.X >= 0 && SelectedTile.X <= 1000 && SelectedTile.Y >= 0 && SelectedTile.Y <= 1000 && TileInReach)
                 {
                     if (Player.UsedItem == false)
                         if (t.Structure != null)
@@ -821,6 +992,15 @@ namespace Devilguard
 
         }
 
+        //Limit to once
+        void Combat_Block_Tiles()
+        {
+            foreach(var a in ActorList)
+            {
+                Point pos = a.Value.getTile();
+                tilemap[pos.X, pos.Y].Occupied = a.Key;
+            }
+        }
 
 
 
@@ -857,9 +1037,27 @@ namespace Devilguard
 
                         byte dur = 255;
                         spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(C_Tile[tilemap[x, y].ID].Sprite * 32, 0, 32, 32), new Color(dur, dur, dur));
+
+                        if (GameMode == Listof_GameMode.Combat)
+                        {
+                            /*
+                            if (currentCombat.CurrentTurn != null)
+                            {
+                                Point actorP = currentCombat.CurrentTurn.getTile();
+                                if (actorP.X == x && actorP.Y == y)
+                                    spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(C_Tile[tilemap[x, y].ID].Sprite * 32, 0, 32, 32), new Color(150, 150, 255));
+                            }
+                            */
+                            if (path != null)
+                            {
+                                if (path.Contains(new Point(x, y)))
+                                    spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(C_Tile[tilemap[x, y].ID].Sprite * 32, 0, 32, 32), new Color(150, 255, 150));
+                            }
+                        }                        
                         
+
                         //spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Color(dur, dur, dur));
-                        //}                        
+                        //}
                         if (tilemap[x, y].Structure != null)
                         {
                             dur = (byte)((255 / C_Structure[tilemap[x, y].Structure.Type].Durability) * tilemap[x, y].Structure.Durability);
@@ -882,28 +1080,58 @@ namespace Devilguard
                     //spriteBatch.Draw(Background_Tiles[tilemap[x, y]], new Rectangle(pos.X, pos.Y, 64, 64), Color.White);
                 }
 
-            Rectangle sbox = new Rectangle(Player.Reach.Location + Player.getTile(), Player.Reach.Size);
-            if (sbox.Contains(SelectedTile))
+            //Draw Personal SelectBox
+            if (GameMode == Listof_GameMode.Personal)
             {
-                pos.X = SelectedTile.X * GetATSI() - Screen_Scroll.X;
-                pos.Y = SelectedTile.Y * GetATSI() - Screen_Scroll.Y;
-                //spriteBatch.Draw(Item_Tiles[0], new Rectangle(pos.X, pos.Y - GetATSI() * 2, GetATSI(), GetATSI() * 3), new Color(dur, dur, dur));
-                spriteBatch.Draw(UI_Textures[(int)SD_UI.SelectBox], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), Color.White);
+                Rectangle sbox = new Rectangle(Player.Reach.Location + Player.getTile(), Player.Reach.Size);
+                if (sbox.Contains(SelectedTile))
+                {
+                    pos.X = SelectedTile.X * GetATSI() - Screen_Scroll.X;
+                    pos.Y = SelectedTile.Y * GetATSI() - Screen_Scroll.Y;
+                    //spriteBatch.Draw(Item_Tiles[0], new Rectangle(pos.X, pos.Y - GetATSI() * 2, GetATSI(), GetATSI() * 3), new Color(dur, dur, dur));
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.SelectBox], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), Color.White);
+                }
             }
 
-            spriteBatch.Draw(Actor_Sprites[0], new Rectangle((int)(Player.Location.X * Screen_Zoom - Screen_Scroll.X), (int)(Player.Location.Y * Screen_Zoom - Screen_Scroll.Y), GetATSI(), GetATSI()), Color.White);
+            if (GameMode == Listof_GameMode.Combat)
+            {
+                    pos.X = SelectedTile.X * GetATSI() - Screen_Scroll.X;
+                    pos.Y = SelectedTile.Y * GetATSI() - Screen_Scroll.Y;
+                    //spriteBatch.Draw(Item_Tiles[0], new Rectangle(pos.X, pos.Y - GetATSI() * 2, GetATSI(), GetATSI() * 3), new Color(dur, dur, dur));
+                    spriteBatch.Draw(UI_Textures[(int)SD_UI.SelectBox], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), Color.White);
+            }
+
+            //spriteBatch.Draw(Actor_Sprites[0], new Rectangle((int)(Player.Location.X * Screen_Zoom - Screen_Scroll.X), (int)(Player.Location.Y * Screen_Zoom - Screen_Scroll.Y), GetATSI(), GetATSI()), Color.White);
+            DrawActors();
+
+            if (currentCombat.CurrentTurn != null)
+            {
+                spriteBatch.Draw(UI_Textures[(int)SD_UI.SelectBox], new Rectangle(
+                                    (int)((currentCombat.CurrentTurn.Location.X + currentCombat.CurrentTurn.Hitbox.X) * Screen_Zoom - Screen_Scroll.X),
+                                    (int)((currentCombat.CurrentTurn.Location.Y + currentCombat.CurrentTurn.Hitbox.Y) * Screen_Zoom - Screen_Scroll.Y),
+                                    (int)(currentCombat.CurrentTurn.Hitbox.Width * Screen_Zoom),
+                                    (int)(currentCombat.CurrentTurn.Hitbox.Height * Screen_Zoom))
+                                    , Color.White);
+            }
+
+            if (GameMode == Listof_GameMode.Personal)
+            {
+                if (InventoryOpen)
+                    DrawInventory();
+                else
+                    DrawBar();
+            }
 
 
-            
+            if (GameMode == Listof_GameMode.Combat)
+            {
 
-            
+                DrawCombat();
 
-            if (InventoryOpen)
-                DrawInventory();
-            else
-                DrawBar();
 
-            if (MouseHeldItem != null)
+            }
+
+                if (MouseHeldItem != null)
             {
                 Point p;
                 p.X = Mouse.GetState().Position.X - 16;
@@ -918,10 +1146,21 @@ namespace Devilguard
         }
 
 
+        void DrawActors()
+        {
+            foreach (var a in ActorList)
+            {
+                spriteBatch.Draw(Actor_Sprites[0],
+                    new Rectangle((int)(a.Value.Location.X * Screen_Zoom - Screen_Scroll.X), (int)(a.Value.Location.Y * Screen_Zoom - Screen_Scroll.Y), GetATSI(), GetATSI()),
+                    new Rectangle(a.Value.Sprite * 64, 0, 64, 64),
+                    Color.White);
+            }
+        }
+
 
         void DrawBar()
         {
-            GUIElementType bar = gui.InventoryElements[(int)UIElement.BackBottomBar];
+            GUIElementType bar = gui.InventoryElements[(int)UIInventoryElement.BackBottomBar];
 
             if (!InventoryOpen)
             {
@@ -963,8 +1202,8 @@ namespace Devilguard
         void DrawInventory()
         {
             Point p;
-            p.X = gui.InventoryElements[(int)UIElement.BackInventory].Location.X;
-            p.Y = gui.InventoryElements[(int)UIElement.BackInventory].Location.Y;
+            p.X = gui.InventoryElements[(int)UIInventoryElement.BackInventory].Location.X;
+            p.Y = gui.InventoryElements[(int)UIInventoryElement.BackInventory].Location.Y;
 
             foreach (var item in gui.InventoryElements)
                 if (item.Value.Enabled)
@@ -1015,8 +1254,8 @@ namespace Devilguard
             xpos = 0;
             ypos = 0;
 
-            p.X = gui.InventoryElements[(int)UIElement.BackCrafting].Location.X;
-            p.Y = gui.InventoryElements[(int)UIElement.BackCrafting].Location.Y;
+            p.X = gui.InventoryElements[(int)UIInventoryElement.BackCrafting].Location.X;
+            p.Y = gui.InventoryElements[(int)UIInventoryElement.BackCrafting].Location.Y;
             //Draw Crafting
             foreach (var item in Player.CraftingBlueprints.Blueprints)
             {                
@@ -1046,7 +1285,35 @@ namespace Devilguard
 
         }
         
+        void DrawCombat()
+        {
 
+
+            foreach (var item in gui.CombatElements)
+                if (item.Value.Enabled)
+                    if (item.Value.Sprite != SD_UI.None)
+                        spriteBatch.Draw(UI_Textures[(int)item.Value.Sprite], item.Value.Location, item.Value.color);
+
+
+            if (currentCombat.CurrentTurn != null)
+            {
+                spriteBatch.Draw(Actor_Sprites[0], new Rectangle(64, Screen_Size.Y - 128, 64, 64), new Rectangle(currentCombat.CurrentTurn.Sprite * 64, 0, 64, 64), Color.White);
+                spriteBatch.DrawString(basicfont, currentCombat.CurrentTurn.Stats.Speed.ToString(), new Vector2(90, Screen_Size.Y - 150), Color.White);
+            }
+            
+            
+
+            List<Actor_Type> inilist = currentCombat.GetCombatOrder(20);
+            for (int x = 0; x < inilist.Count; x++)
+            {
+                spriteBatch.Draw(Actor_Sprites[0], new Rectangle((x + 2) * 64, Screen_Size.Y - 128, 64, 64), new Rectangle(inilist[x].Sprite * 64, 0, 64, 64), Color.White);
+                spriteBatch.DrawString(basicfont, inilist[x].Stats.Speed.ToString(), new Vector2(26 + (x + 2) * 64, Screen_Size.Y - 150), Color.White);
+            }
+            
+
+
+
+        }
 
 
         void DrawInventoryEquipment()

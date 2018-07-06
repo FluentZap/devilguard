@@ -17,23 +17,52 @@ namespace Devilguard
     }
 
 
-    class Actor_Type
+    public struct Actor_Stats_Type
     {
-        public Point Location;
+        //Stats
+        public int Level, Vigor, Will, Strength, Mind, Speed;
+        public int HP, HPMax, MP, MPMax, Attack, SpecialAttack;
+        
+    }
+
+    enum Listof_Allegiance
+    {
+        Controlled,
+        Ally,
+        Enemy,
+        Neutral
+    }
+
+
+
+    class Actor_Type
+    {        
+        public int ID;
+        public Point2 Location;
+        public int Sprite;
+        public Listof_Allegiance Allegiance;
+
+        public Actor_Stats_Type Stats;
+        public Actor_Loadout Loadout = new Actor_Loadout();
+
+
+
         public Rectangle Hitbox;
         public float Speed;
         public Inventory inventory = new Inventory();
         public CraftCatalog CraftingBlueprints = new CraftCatalog();
         public bool UsedItem;
         public int ItemCooldown;        
-        public Actor_Loadout Loadout = new Actor_Loadout();
         public int SelectedItem;
         public Rectangle Reach = new Rectangle(-2, -2, 5, 5);
+
+        public Queue<Point> MoveQueue = new Queue<Point>();
+        
 
 
         public Point getTile()
         {
-            return (Hitbox.Center + Location) / new Point(32, 32);
+            return (new Point(Hitbox.Center.X, Hitbox.Bottom) + new Point((int)Location.X, (int)Location.Y)) / new Point(32, 32);
         }
 
 
