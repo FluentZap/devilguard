@@ -57,7 +57,7 @@ namespace Devilguard
         public Rectangle Reach = new Rectangle(-2, -2, 5, 5);
 
         public Queue<Point> MoveQueue = new Queue<Point>();
-        
+        public bool UsedAction, UsedMove;
 
 
         public Point getTile()

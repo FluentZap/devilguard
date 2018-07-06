@@ -327,7 +327,8 @@ namespace Devilguard
                 RecalculatePF = true;
             }
 
-
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed) LeftMouseClicked = true;
+            if (Mouse.GetState().RightButton == ButtonState.Pressed) RightMouseClicked = true;
 
             switch (GameMode)
             {
@@ -340,6 +341,9 @@ namespace Devilguard
                 case Listof_GameMode.Strategy:
                     break;
             }
+
+            if (Mouse.GetState().LeftButton == ButtonState.Released) LeftMouseClicked = false;
+            if (Mouse.GetState().RightButton == ButtonState.Released) RightMouseClicked = false;
 
             RunScripts();
 
@@ -392,6 +396,11 @@ namespace Devilguard
 
                     if (a.Value.Location.X == dest.X && a.Value.Location.Y == dest.Y)
                         a.Value.MoveQueue.Dequeue();
+                    if (a.Value.MoveQueue.Count == 0)
+                    {
+                        currentCombat.MoveMode = Listof_MoveMode.Off;
+                        currentCombat.CurrentTurn.UsedMove = true;
+                    }
                 }
             }
         }
@@ -442,50 +451,63 @@ namespace Devilguard
 
             if (!InventoryOpen)
                 UI_PersonalHandleMouse();
-
-            if (Mouse.GetState().LeftButton == ButtonState.Pressed) LeftMouseClicked = true;
-            if (Mouse.GetState().RightButton == ButtonState.Pressed) RightMouseClicked = true;
-
+            
             if (InventoryOpen)
                 UI_CheckInventory();
             else
                 UI_Bar();
 
-            if (Mouse.GetState().LeftButton == ButtonState.Released) LeftMouseClicked = false;
-            if (Mouse.GetState().RightButton == ButtonState.Released) RightMouseClicked = false;
         }
 
 
         void UI_Combat_Mode()
         {
 
-            if (SelectedTile.X >= 0 && SelectedTile.Y >= 0 && SelectedTile.X <= 1000 && SelectedTile.Y <= 1000 && (SelectedTile != LastSelectedTile || RecalculatePF))
+
+            Point pos = Mouse.GetState().Position;
+
+            if (Mouse.GetState().LeftButton == ButtonState.Released && LeftMouseClicked == true)
+                foreach (var item in gui.CombatElements)
+                    //Crafting Buttons
+                    if (item.Value.Location.Contains(pos))
+                    {
+
+                        if (item.Key == (int)UICombatElement.Action_Move)
+                        {
+                            currentCombat.MoveMode  = Listof_MoveMode.Waitingforcommand;
+
+
+
+                        }
+
+                    }
+            
+            if (currentCombat.MoveMode == Listof_MoveMode.Waitingforcommand)
             {
-                Point p = currentCombat.CurrentTurn.getTile();
-                pathfind.Standard_Pathfind(p, SelectedTile, 20);
-                LastSelectedTile = SelectedTile;
-                RecalculatePF = false;
-                if (pathfind.Found_State == PFState.Found)
+                if (SelectedTile.X >= 0 && SelectedTile.Y >= 0 && SelectedTile.X <= 1000 && SelectedTile.Y <= 1000 && (SelectedTile != LastSelectedTile || RecalculatePF))
                 {
-                    path = pathfind.Path;
-                }
-            }
-            if (Mouse.GetState().LeftButton == ButtonState.Pressed) LeftMouseClicked = true;
-            if (Mouse.GetState().RightButton == ButtonState.Pressed) RightMouseClicked = true;
+                    Point p = currentCombat.CurrentTurn.getTile();
+                    pathfind.Standard_Pathfind(p, SelectedTile, 20);
+                    LastSelectedTile = SelectedTile;
+                    RecalculatePF = false;
+                    if (pathfind.Found_State == PFState.Found)
+                    {
+                        path = pathfind.Path;
+                    }
+                }                
 
-            if (Mouse.GetState().LeftButton == ButtonState.Released && LeftMouseClicked == true && path.Count != 0  && SelectedTile == path.Last.Value)
-            {
-                Point p = currentCombat.CurrentTurn.getTile();                
-                foreach (var item in path)
+                if (Mouse.GetState().LeftButton == ButtonState.Released && LeftMouseClicked == true && path != null && path.Count != 0 && SelectedTile == path.Last.Value)
                 {
-                    tilemap[p.X, p.Y].Occupied = -1;
-                    currentCombat.CurrentTurn.MoveQueue.Enqueue(item * new Point(32, 32));
+                    Point p = currentCombat.CurrentTurn.getTile();
+                    foreach (var item in path)
+                    {
+                        tilemap[p.X, p.Y].Occupied = -1;
+                        currentCombat.CurrentTurn.MoveQueue.Enqueue(item * new Point(32, 32));
+                        currentCombat.MoveMode = Listof_MoveMode.Moving;
+                    }
                 }
+                
             }
-
-            if (Mouse.GetState().LeftButton == ButtonState.Released) LeftMouseClicked = false;
-            if (Mouse.GetState().RightButton == ButtonState.Released) RightMouseClicked = false;
-
         }
 
 
@@ -1048,16 +1070,21 @@ namespace Devilguard
                                     spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(C_Tile[tilemap[x, y].ID].Sprite * 32, 0, 32, 32), new Color(150, 150, 255));
                             }
                             */
-                            if (path != null)
+                            if (path != null && currentCombat.MoveMode == Listof_MoveMode.Waitingforcommand)
                             {
                                 if (path.Contains(new Point(x, y)))
                                     spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(C_Tile[tilemap[x, y].ID].Sprite * 32, 0, 32, 32), new Color(150, 255, 150));
                             }
-                        }                        
+
+                            if (currentCombat.MoveMode == Listof_MoveMode.Moving)
+                            {
+                                if (currentCombat.CurrentTurn.MoveQueue.Contains(new Point(x * 32, y * 32)))
+                                    spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(C_Tile[tilemap[x, y].ID].Sprite * 32, 0, 32, 32), new Color(150, 255, 150));
+                            }                
                         
 
                         //spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Color(dur, dur, dur));
-                        //}
+                        }
                         if (tilemap[x, y].Structure != null)
                         {
                             dur = (byte)((255 / C_Structure[tilemap[x, y].Structure.Type].Durability) * tilemap[x, y].Structure.Durability);
@@ -1287,12 +1314,33 @@ namespace Devilguard
         
         void DrawCombat()
         {
+            Color c;
+            if (currentCombat.CurrentTurn.UsedAction)
+                c = new Color(100, 100, 100);
+            else
+                c = Color.White;
+            gui.CombatElements[(int)UICombatElement.Action_Skill1].color = c;
+            gui.CombatElements[(int)UICombatElement.Action_Skill2].color = c;
+
+            if (currentCombat.CurrentTurn.UsedMove)
+                c = new Color(100, 100, 100);
+            else
+                c = Color.White;
+            gui.CombatElements[(int)UICombatElement.Action_Move].color = c;
+
+
+
 
 
             foreach (var item in gui.CombatElements)
                 if (item.Value.Enabled)
                     if (item.Value.Sprite != SD_UI.None)
                         spriteBatch.Draw(UI_Textures[(int)item.Value.Sprite], item.Value.Location, item.Value.color);
+
+                        
+
+
+            
 
 
             if (currentCombat.CurrentTurn != null)
