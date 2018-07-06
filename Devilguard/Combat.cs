@@ -14,7 +14,7 @@ namespace Devilguard
     class Combat_Slot
     {
         public Actor_Type Actor;
-        public int Initiative;        
+        public int Initiative;
 
         public Combat_Slot(Actor_Type actor, int initiative)
         {
@@ -32,6 +32,12 @@ namespace Devilguard
         Moving
     }
 
+    enum Listof_AttackMode
+    {
+        Off,
+        Waitingforcommand,
+        Moving
+    }
 
     class Combat
     {
@@ -40,9 +46,10 @@ namespace Devilguard
         public bool Advancing;
 
         public Listof_MoveMode MoveMode;
+        public Listof_AttackMode AttackMode;
 
         public void AdvanceToTurn()
-        {            
+        {
             if (InitiativeList.Count > 0)
             {
                 CurrentTurn = null;
@@ -55,18 +62,18 @@ namespace Devilguard
                         if (item.Initiative >= 1000)
                         {
                             CurrentTurn = item.Actor;
+                            CurrentTurn.NewTurnRefresh();
                             item.Initiative -= 1000;
                             break;
                         }
                     }
                 }
             }
-        }    
+        }
 
-    public List<Actor_Type> GetCombatOrder(int amount)
+        public List<Actor_Type> GetCombatOrder(int amount)
         {
             List<Combat_Slot> order = new List<Combat_Slot>();
-
             List<Actor_Type> combatlist = new List<Actor_Type>();
 
             foreach (var actor in InitiativeList)
@@ -86,19 +93,34 @@ namespace Devilguard
                         combatlist.Add(item.Actor);
                         item.Initiative -= 1000;
                         slots++;
-                    }                    
+                    }
                 }
             }
             return combatlist;
         }
-    }
 
+
+        public void Remove_Actor(Actor_Type actor)
+        {
+            foreach (var item in InitiativeList)
+            {
+                if (item.Actor == actor)
+                {
+                    InitiativeList.Remove(item);
+                    break;
+                }
+            }
+        }
+
+    }
 
     public class AI_Combat_Move
     {
 
 
 
-    }    
+    }
+
+
 
 }

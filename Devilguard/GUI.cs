@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using MonoGame.Extended;
 using MonoGame.Extended.ViewportAdapters;
 using System;
+using static Devilguard.Game1;
 
 namespace Devilguard
 {
@@ -24,22 +25,12 @@ namespace Devilguard
     {
         BackInitiative,
         BackActions,
+        Action_Attack,
         Action_Skill1,
         Action_Skill2,        
-        Action_Move        
+        Action_Move
     }
-
-    enum SD_UI : int
-    {
-        None = -1,
-        Back,
-        BackLoadout,
-        Button,
-        Resources,
-        Items,
-        BottomBar,
-        SelectBox
-    };
+    
 
 
 
@@ -72,34 +63,41 @@ namespace Devilguard
         {
             Point p;
             int ID;
+            p = new Point(64, (int)S.Y / 2 - 512);
             CombatElements.Add((int)UICombatElement.BackInitiative, new GUIElementType
             {
-                Location = new Rectangle(0, (int)S.Y - 200, (int)S.X, 200),
-                Sprite = SD_UI.Back
+                Location = new Rectangle(0, (int)S.Y - 256, (int)S.X, 256),
+                Sprite = SD_UI.Combat_ActionBack
             });
             
             CombatElements.Add((int)UICombatElement.BackActions, new GUIElementType
             {
-                Location = new Rectangle(0, (int)S.Y / 2 - 200, 200, 400),
-                Sprite = SD_UI.Back
+                Location = new Rectangle(p.X, p.Y, 256, 512),
+                Sprite = SD_UI.Combat_ActionBack
+            });
+
+            CombatElements.Add((int)UICombatElement.Action_Attack, new GUIElementType
+            {
+                Location = new Rectangle(p.X + 48, p.Y + 48, 160, 64),
+                Sprite = SD_UI.Combat_ActionButton
             });
 
             CombatElements.Add((int)UICombatElement.Action_Skill1, new GUIElementType
             {
-                Location = new Rectangle(0, (int)S.Y / 2 - 180, 200, 60),
-                Sprite = SD_UI.Button
+                Location = new Rectangle(p.X + 48, p.Y + 112, 160, 64),
+                Sprite = SD_UI.Combat_ActionButton
             });
 
             CombatElements.Add((int)UICombatElement.Action_Skill2, new GUIElementType
             {
-                Location = new Rectangle(0, (int)S.Y / 2 - 100, 200, 60),
-                Sprite = SD_UI.Button
+                Location = new Rectangle(p.X + 48, p.Y + 176, 160, 64),
+                Sprite = SD_UI.Combat_ActionButton
             });
 
             CombatElements.Add((int)UICombatElement.Action_Move, new GUIElementType
             {
-                Location = new Rectangle(0, (int)S.Y / 2 - 20, 200, 60),
-                Sprite = SD_UI.Button
+                Location = new Rectangle(p.X + 48, p.Y + 240, 160, 64),
+                Sprite = SD_UI.Combat_ActionButton
             });
         }
 

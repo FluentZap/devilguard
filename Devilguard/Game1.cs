@@ -40,6 +40,9 @@ namespace Devilguard
         public Point Screen_Size;
         Point MouseDragStart;
         bool MouseDraging;
+
+        Point MouseDragScreenScrollStart;
+
         bool LeftMouseClicked;
         bool RightMouseClicked;
 
@@ -57,8 +60,11 @@ namespace Devilguard
         bool RecalculatePF = true;
 
 
-        LinkedList<Point> path;
+        int TileCircleSize;
+        HashSet<Point> TileCircle= new HashSet<Point>();
 
+        //LinkedList<Point> path;
+        List<Point> path;
         Dictionary<int, Actor_Type> ActorList = new Dictionary<int, Actor_Type>();
 
 
@@ -94,7 +100,7 @@ namespace Devilguard
 
         GUI gui;
 
-        Actor_Type Player = new Actor_Type();        
+        Actor_Type Player = new Actor_Type();
         enum Direction { LEFT, RIGHT, UP, DOWN };
         
 
@@ -102,8 +108,8 @@ namespace Devilguard
         void Move_Actor(Actor_Type A, Point2 Vector)
         {
             float X, Y;
-            Vector.X *= A.Speed;
-            Vector.Y *= A.Speed;
+            //Vector.X *= A.Speed;
+            //Vector.Y *= A.Speed;
 
             while (Vector.X == 0 && Vector.Y == 0)
             {
@@ -201,8 +207,10 @@ namespace Devilguard
 
             Player.Hitbox = new Rectangle(7, 2, 18, 29);
             Player.inventory.AddResource(Listof_ResourceItem.Wood, 500);
-            Player.inventory.AddResource(Listof_ResourceItem.Stone, 500);
-            Player.Stats.Speed = 5;
+            Player.inventory.AddResource(Listof_ResourceItem.Stone, 500);            
+            Player.Stats.MovementMax = 8;
+            Player.Stats.Movement = 8;
+            Player.PrimaryClass.Class = Listof_Classes.Medicus;
             //Player.Loadout.UsableItems[0] = new InventoryEntry(InventoryItem.WoodClub);
             //Player.Loadout.UsableItems[1] = new InventoryEntry(InventoryItem.WoodBow);
             //Player.Loadout.UsableItems[3] = new InventoryEntry(InventoryItem.WoodAxe);
@@ -212,7 +220,8 @@ namespace Devilguard
 
 
             ActorList.Add(0, Player);
-            Player.Stats.Speed = 9;
+            Player.Stats.Speed = 15;
+            Player.Stats.HP = 52; Player.Stats.HPMax = 52;
             ActorList.Add(1, new Actor_Type());
             ActorList.Add(2, new Actor_Type());
             ActorList.Add(3, new Actor_Type());
@@ -220,6 +229,14 @@ namespace Devilguard
             ActorList[1].Stats.Speed = 10; ActorList[1].Sprite = 1;
             ActorList[2].Stats.Speed = 8;  ActorList[2].Sprite = 2;
             ActorList[3].Stats.Speed = 12; ActorList[3].Sprite = 3;
+
+            ActorList[1].Stats.HP = 40; ActorList[1].Stats.HPMax = 40;
+            ActorList[2].Stats.HP = 40; ActorList[2].Stats.HPMax = 40;
+            ActorList[3].Stats.HP = 40; ActorList[3].Stats.HPMax = 40;
+
+            ActorList[1].PrimaryClass.Class = Listof_Classes.Trooper;
+            ActorList[2].PrimaryClass.Class = Listof_Classes.Medicus;
+            ActorList[3].PrimaryClass.Class = Listof_Classes.Lightfoot;
 
             ActorList[1].Location = new Point(10 * 32, 4 * 32);
             ActorList[2].Location = new Point(2 * 32, 2 * 32);
@@ -247,6 +264,22 @@ namespace Devilguard
 
         }
 
+        public enum SD_UI : int
+        {
+            None = -1,
+            Back,
+            BackLoadout,
+            Button,
+            Resources,
+            Items,
+            BottomBar,
+            SelectBox,
+            //Combat
+            Combat_ActionBack,
+            Combat_ActionButton
+
+        };
+
         /// <summary>
         /// LoadContent will be called once per game and is the place to load
         /// all of your content.
@@ -265,6 +298,9 @@ namespace Devilguard
             UI_Textures[(int)SD_UI.Items] = Content.Load<Texture2D>("UI_Items");
             UI_Textures[(int)SD_UI.BottomBar] = Content.Load<Texture2D>("UI_Bar");
             UI_Textures[(int)SD_UI.SelectBox] = Content.Load<Texture2D>("SelectBox");
+            UI_Textures[(int)SD_UI.Combat_ActionBack] = Content.Load<Texture2D>("UI_CombatActionBack");
+
+            UI_Textures[(int)SD_UI.Combat_ActionButton] = Content.Load<Texture2D>("UI_CombatActionButton");
 
             basicfont = Content.Load<SpriteFont>("BasicFont");
 
@@ -293,6 +329,11 @@ namespace Devilguard
                 Exit();
 
             SelectedTile = (Mouse.GetState().Position + Screen_Scroll) / new Point(GetATSI(), GetATSI());
+            if (Mouse.GetState().Position.X + Screen_Scroll.X < 0) SelectedTile.X = -1;
+            if (Mouse.GetState().Position.Y + Screen_Scroll.Y < 0) SelectedTile.Y = -1;
+
+            if (SelectedTile.X > 1000) SelectedTile.X = -1;
+            if (SelectedTile.Y > 1000) SelectedTile.Y = -1;
 
             for (int x = 0; x < Enum.GetNames(typeof(Keys)).Length; x++)
             {
@@ -371,7 +412,7 @@ namespace Devilguard
                 if (a.Value.MoveQueue.Count > 0 )
                 {
                     advance = false;
-                    Point dest = a.Value.MoveQueue.Peek();
+                    Point dest = a.Value.MoveQueue[0];
                     Point2 m = new Point2();
                     if (a.Value.Location.X < dest.X) m.X = 2f;
                     if (a.Value.Location.X > dest.X) m.X = -2f;
@@ -395,11 +436,19 @@ namespace Devilguard
                         a.Value.Location.Y += m.Y;
 
                     if (a.Value.Location.X == dest.X && a.Value.Location.Y == dest.Y)
-                        a.Value.MoveQueue.Dequeue();
+                        a.Value.MoveQueue.RemoveAt(0);
                     if (a.Value.MoveQueue.Count == 0)
                     {
-                        currentCombat.MoveMode = Listof_MoveMode.Off;
-                        currentCombat.CurrentTurn.UsedMove = true;
+                        if (currentCombat.CurrentTurn.Stats.Movement <= 0 )
+                            currentCombat.MoveMode = Listof_MoveMode.Off;
+                        else
+                        {
+                            currentCombat.MoveMode = Listof_MoveMode.Waitingforcommand;
+                            path = null;
+                        }
+                            
+
+                        //currentCombat.CurrentTurn.UsedMove = true;
                     }
                 }
             }
@@ -471,43 +520,103 @@ namespace Devilguard
                     //Crafting Buttons
                     if (item.Value.Location.Contains(pos))
                     {
-
-                        if (item.Key == (int)UICombatElement.Action_Move)
+                        if (item.Key == (int)UICombatElement.Action_Move && !currentCombat.CurrentTurn.UsedMove)
                         {
                             currentCombat.MoveMode  = Listof_MoveMode.Waitingforcommand;
-
-
-
+                            currentCombat.AttackMode = Listof_AttackMode.Off;
+                            path = null;
+                            LeftMouseClicked = false;
                         }
 
+                        if (item.Key == (int)UICombatElement.Action_Attack && !currentCombat.CurrentTurn.UsedAction)
+                        {
+                            currentCombat.MoveMode = Listof_MoveMode.Off;
+                            currentCombat.AttackMode = Listof_AttackMode.Waitingforcommand;
+                            path = null;
+                            LeftMouseClicked = false;
+                        }
                     }
+
             
             if (currentCombat.MoveMode == Listof_MoveMode.Waitingforcommand)
-            {
+            {                
+
                 if (SelectedTile.X >= 0 && SelectedTile.Y >= 0 && SelectedTile.X <= 1000 && SelectedTile.Y <= 1000 && (SelectedTile != LastSelectedTile || RecalculatePF))
                 {
                     Point p = currentCombat.CurrentTurn.getTile();
+                    //pathfind.Standard_Pathfind(p, SelectedTile, currentCombat.CurrentTurn.Stats.Movement);
                     pathfind.Standard_Pathfind(p, SelectedTile, 20);
                     LastSelectedTile = SelectedTile;
                     RecalculatePF = false;
                     if (pathfind.Found_State == PFState.Found)
                     {
-                        path = pathfind.Path;
+                        path = pathfind.Path;                        
+
+                        int count = (path.Count - 1) - currentCombat.CurrentTurn.Stats.Movement;
+                        if (count > 0)
+                            for (int x = path.Count - 1; x > currentCombat.CurrentTurn.Stats.Movement; x--)
+                                path.RemoveAt(x);
                     }
+                    
                 }                
 
-                if (Mouse.GetState().LeftButton == ButtonState.Released && LeftMouseClicked == true && path != null && path.Count != 0 && SelectedTile == path.Last.Value)
+                if (Mouse.GetState().LeftButton == ButtonState.Released && LeftMouseClicked == true && path != null && path.Count != 0 && SelectedTile == path[path.Count - 1])
                 {
                     Point p = currentCombat.CurrentTurn.getTile();
+                    tilemap[p.X, p.Y].Occupied = -1;
+
                     foreach (var item in path)
+                        currentCombat.CurrentTurn.MoveQueue.Add(item * new Point(32, 32));
+                    
+                    currentCombat.CurrentTurn.Stats.Movement -= path.Count - 1;
+                    if (currentCombat.CurrentTurn.Stats.Movement <= 0) currentCombat.CurrentTurn.UsedMove = true;
+                    currentCombat.MoveMode = Listof_MoveMode.Moving;
+                    //path = null;
+                }               
+
+                if (Mouse.GetState().RightButton == ButtonState.Released && RightMouseClicked == true)
+                {                    
+                    if (Math.Abs(MouseDragScreenScrollStart.X - Screen_Scroll.X) < 4  && Math.Abs(MouseDragScreenScrollStart.Y - Screen_Scroll.Y) < 4)
                     {
-                        tilemap[p.X, p.Y].Occupied = -1;
-                        currentCombat.CurrentTurn.MoveQueue.Enqueue(item * new Point(32, 32));
-                        currentCombat.MoveMode = Listof_MoveMode.Moving;
+                        currentCombat.MoveMode = Listof_MoveMode.Off;                        
+                        RightMouseClicked = false;
+                    }                        
+                }
+
+            }
+
+            if (currentCombat.AttackMode == Listof_AttackMode.Waitingforcommand)
+            {
+
+                if (Mouse.GetState().LeftButton == ButtonState.Released && LeftMouseClicked == true)
+                {
+                    Point p = currentCombat.CurrentTurn.getTile();
+                    if (tilemap[SelectedTile.X, SelectedTile.Y].Occupied > -1)
+                    {
+                        ActorList[tilemap[SelectedTile.X, SelectedTile.Y].Occupied].Stats.HP -= 40;
+                        if (ActorList[tilemap[SelectedTile.X, SelectedTile.Y].Occupied].Stats.HP <= 0 )
+                        {
+                            currentCombat.Remove_Actor(ActorList[tilemap[SelectedTile.X, SelectedTile.Y].Occupied]);
+                            ActorList.Remove(tilemap[SelectedTile.X, SelectedTile.Y].Occupied);                            
+                            tilemap[SelectedTile.X, SelectedTile.Y].Occupied = -1;
+                        }
+                        currentCombat.CurrentTurn.UsedAction = true;
+                        currentCombat.AttackMode = Listof_AttackMode.Off;
                     }
                 }
-                
+
+
+                if (Mouse.GetState().RightButton == ButtonState.Released && RightMouseClicked == true)
+                {
+                    if (Math.Abs(MouseDragScreenScrollStart.X - Screen_Scroll.X) < 4 && Math.Abs(MouseDragScreenScrollStart.Y - Screen_Scroll.Y) < 4)
+                    {
+                        currentCombat.AttackMode = Listof_AttackMode.Off;
+                        RightMouseClicked = false;
+                    }
+                }
+
             }
+
         }
 
 
@@ -519,6 +628,7 @@ namespace Devilguard
                 {
                     MouseDraging = true;
                     MouseDragStart = Screen_Scroll + Mouse.GetState().Position;
+                    MouseDragScreenScrollStart = Screen_Scroll;
                 }
             }
 
@@ -1073,17 +1183,47 @@ namespace Devilguard
                             if (path != null && currentCombat.MoveMode == Listof_MoveMode.Waitingforcommand)
                             {
                                 if (path.Contains(new Point(x, y)))
+                                {
                                     spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(C_Tile[tilemap[x, y].ID].Sprite * 32, 0, 32, 32), new Color(150, 255, 150));
+                                    spriteBatch.DrawString(basicfont, path.IndexOf(new Point(x, y)).ToString(), new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()).Location.ToVector2() + new Vector2(8, 8), Color.White);
+                                }                                    
                             }
-
+                            
                             if (currentCombat.MoveMode == Listof_MoveMode.Moving)
                             {
                                 if (currentCombat.CurrentTurn.MoveQueue.Contains(new Point(x * 32, y * 32)))
+                                {
                                     spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(C_Tile[tilemap[x, y].ID].Sprite * 32, 0, 32, 32), new Color(150, 255, 150));
-                            }                
-                        
+                                    spriteBatch.DrawString(basicfont, path.IndexOf(new Point(x, y)).ToString(), new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()).Location.ToVector2() + new Vector2(8, 8), Color.White);
+                                    //spriteBatch.DrawString(basicfont, (currentCombat.CurrentTurn.MoveQueue.Count - currentCombat.CurrentTurn.MoveQueue.IndexOf(new Point(x * 32, y * 32))).ToString() , new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()).Location.ToVector2() + new Vector2(8, 8), Color.White);
+                                }
+                                    
+                            }
 
-                        //spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Color(dur, dur, dur));
+                            if (currentCombat.AttackMode == Listof_AttackMode.Waitingforcommand)
+                            {
+                                //Rectangle apos = new Rectangle(currentCombat.CurrentTurn.getTile(), new Point(1, 1));
+                                //apos.Inflate(1, 1);
+                                Point p = currentCombat.CurrentTurn.getTile();
+
+                                CreateCircle(p.X, p.Y, 1);
+                                CreateCircle(p.X, p.Y, 2);
+                                CreateCircle(p.X, p.Y, 3);
+                                CreateCircle(p.X, p.Y, 4);
+                                CreateCircle(p.X, p.Y, 5);
+                                CreateCircle(p.X, p.Y, 6);
+                                CreateCircle(p.X, p.Y, 7);
+                                CreateCircle(p.X, p.Y, 8);
+
+                                if (TileCircle.Contains(new Point(x, y)))
+                                { 
+                                    spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Rectangle(C_Tile[tilemap[x, y].ID].Sprite * 32, 0, 32, 32), new Color(255, 150, 150));
+                                }
+                            }
+
+
+
+                            //spriteBatch.Draw(Background_Tiles[0], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), new Color(dur, dur, dur));
                         }
                         if (tilemap[x, y].Structure != null)
                         {
@@ -1111,21 +1251,24 @@ namespace Devilguard
             if (GameMode == Listof_GameMode.Personal)
             {
                 Rectangle sbox = new Rectangle(Player.Reach.Location + Player.getTile(), Player.Reach.Size);
-                if (sbox.Contains(SelectedTile))
+                if (sbox.Contains(SelectedTile) && SelectedTile.X >= 0 && SelectedTile.Y >= 0 && SelectedTile.X <= 1000 && SelectedTile.Y <= 1000)
+                {                    
+                        pos.X = SelectedTile.X * GetATSI() - Screen_Scroll.X;
+                        pos.Y = SelectedTile.Y * GetATSI() - Screen_Scroll.Y;
+                        //spriteBatch.Draw(Item_Tiles[0], new Rectangle(pos.X, pos.Y - GetATSI() * 2, GetATSI(), GetATSI() * 3), new Color(dur, dur, dur));
+                        spriteBatch.Draw(UI_Textures[(int)SD_UI.SelectBox], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), Color.White);                 
+                }
+            }
+
+            if (GameMode == Listof_GameMode.Combat)
+            {
+                if (SelectedTile.X >= 0 && SelectedTile.Y >= 0 && SelectedTile.X <= 1000 && SelectedTile.Y <= 1000)
                 {
                     pos.X = SelectedTile.X * GetATSI() - Screen_Scroll.X;
                     pos.Y = SelectedTile.Y * GetATSI() - Screen_Scroll.Y;
                     //spriteBatch.Draw(Item_Tiles[0], new Rectangle(pos.X, pos.Y - GetATSI() * 2, GetATSI(), GetATSI() * 3), new Color(dur, dur, dur));
                     spriteBatch.Draw(UI_Textures[(int)SD_UI.SelectBox], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), Color.White);
                 }
-            }
-
-            if (GameMode == Listof_GameMode.Combat)
-            {
-                    pos.X = SelectedTile.X * GetATSI() - Screen_Scroll.X;
-                    pos.Y = SelectedTile.Y * GetATSI() - Screen_Scroll.Y;
-                    //spriteBatch.Draw(Item_Tiles[0], new Rectangle(pos.X, pos.Y - GetATSI() * 2, GetATSI(), GetATSI() * 3), new Color(dur, dur, dur));
-                    spriteBatch.Draw(UI_Textures[(int)SD_UI.SelectBox], new Rectangle(pos.X, pos.Y, GetATSI(), GetATSI()), Color.White);
             }
 
             //spriteBatch.Draw(Actor_Sprites[0], new Rectangle((int)(Player.Location.X * Screen_Zoom - Screen_Scroll.X), (int)(Player.Location.Y * Screen_Zoom - Screen_Scroll.Y), GetATSI(), GetATSI()), Color.White);
@@ -1319,15 +1462,19 @@ namespace Devilguard
                 c = new Color(100, 100, 100);
             else
                 c = Color.White;
+            gui.CombatElements[(int)UICombatElement.Action_Attack].color = c;
             gui.CombatElements[(int)UICombatElement.Action_Skill1].color = c;
             gui.CombatElements[(int)UICombatElement.Action_Skill2].color = c;
 
-            if (currentCombat.CurrentTurn.UsedMove)
-                c = new Color(100, 100, 100);
-            else
-                c = Color.White;
+            c = Color.White;
+            if (currentCombat.CurrentTurn.UsedMove) c = new Color(100, 100, 100);
+            if (currentCombat.MoveMode == Listof_MoveMode.Waitingforcommand) c = new Color(100, 255, 100);            
             gui.CombatElements[(int)UICombatElement.Action_Move].color = c;
 
+            c = Color.White;
+            if (currentCombat.CurrentTurn.UsedAction) c = new Color(100, 100, 100);
+            if (currentCombat.AttackMode == Listof_AttackMode.Waitingforcommand) c = new Color(255, 100, 100);
+            gui.CombatElements[(int)UICombatElement.Action_Attack].color = c;
 
 
 
@@ -1337,16 +1484,30 @@ namespace Devilguard
                     if (item.Value.Sprite != SD_UI.None)
                         spriteBatch.Draw(UI_Textures[(int)item.Value.Sprite], item.Value.Location, item.Value.color);
 
-                        
-
 
             
+            spriteBatch.DrawString(basicfont, "Attack", gui.CombatElements[(int)UICombatElement.Action_Attack].Location.Location.ToVector2() + new Vector2(32, 32), Color.White);
 
+            if (currentCombat.CurrentTurn.PrimaryClass.Class == Listof_Classes.Empty)
+                spriteBatch.DrawString(basicfont, "None", gui.CombatElements[(int)UICombatElement.Action_Skill1].Location.Location.ToVector2() + new Vector2(32, 32), Color.Gray);
+            else
+                spriteBatch.DrawString(basicfont, catalog.classes.Data[currentCombat.CurrentTurn.PrimaryClass.Class].Skills, gui.CombatElements[(int)UICombatElement.Action_Skill1].Location.Location.ToVector2() + new Vector2(32, 32), Color.White);
+
+
+            if (currentCombat.CurrentTurn.SecondaryClass.Class == Listof_Classes.Empty)
+                spriteBatch.DrawString(basicfont, "None", gui.CombatElements[(int)UICombatElement.Action_Skill2].Location.Location.ToVector2() + new Vector2(32, 32), Color.Gray);
+            else
+                spriteBatch.DrawString(basicfont, catalog.classes.Data[currentCombat.CurrentTurn.SecondaryClass.Class].Skills, gui.CombatElements[(int)UICombatElement.Action_Skill2].Location.Location.ToVector2() + new Vector2(32, 32), Color.White);
+
+            spriteBatch.DrawString(basicfont, "Move", gui.CombatElements[(int)UICombatElement.Action_Move].Location.Location.ToVector2() + new Vector2(32, 32), Color.White);
+
+            spriteBatch.DrawString(basicfont, currentCombat.CurrentTurn.Stats.Movement.ToString() + "/" + currentCombat.CurrentTurn.Stats.MovementMax.ToString(), gui.CombatElements[(int)UICombatElement.Action_Move].Location.Location.ToVector2() + new Vector2(96, 32), Color.White);
 
             if (currentCombat.CurrentTurn != null)
             {
                 spriteBatch.Draw(Actor_Sprites[0], new Rectangle(64, Screen_Size.Y - 128, 64, 64), new Rectangle(currentCombat.CurrentTurn.Sprite * 64, 0, 64, 64), Color.White);
                 spriteBatch.DrawString(basicfont, currentCombat.CurrentTurn.Stats.Speed.ToString(), new Vector2(90, Screen_Size.Y - 150), Color.White);
+                spriteBatch.DrawString(basicfont, currentCombat.CurrentTurn.Stats.HP.ToString() + "/" + currentCombat.CurrentTurn.Stats.HPMax.ToString(), new Vector2(90, Screen_Size.Y - 180), Color.White);
             }
             
             
@@ -1356,6 +1517,8 @@ namespace Devilguard
             {
                 spriteBatch.Draw(Actor_Sprites[0], new Rectangle((x + 2) * 64, Screen_Size.Y - 128, 64, 64), new Rectangle(inilist[x].Sprite * 64, 0, 64, 64), Color.White);
                 spriteBatch.DrawString(basicfont, inilist[x].Stats.Speed.ToString(), new Vector2(26 + (x + 2) * 64, Screen_Size.Y - 150), Color.White);
+
+                spriteBatch.DrawString(basicfont, inilist[x].Stats.HP.ToString() + "/" + inilist[x].Stats.HPMax.ToString(), new Vector2(26 + (x + 2) * 64, Screen_Size.Y - 180), Color.White);                
             }
             
 
@@ -1383,5 +1546,62 @@ namespace Devilguard
             }            
         }
 
+
+
+
+
+
+
+        void CreateCircle(int x0, int y0, int radius)
+        {
+            int x = radius - 1;
+            int y = 0;
+            int dx = 1;
+            int dy = 1;
+            int err = dx - (radius << 1);
+
+            HashSet<Point> Tiles = new HashSet<Point>();
+
+
+            while (x >= y)
+            {
+                Tiles.Add(new Point(x0 + x, y0 + y));
+                Tiles.Add(new Point(x0 + y, y0 + x));
+
+                Tiles.Add(new Point(x0 - y, y0 + x));
+                Tiles.Add(new Point(x0 - x, y0 + y));
+
+                Tiles.Add(new Point(x0 - x, y0 - y));
+                Tiles.Add(new Point(x0 - y, y0 - x));
+
+                Tiles.Add(new Point(x0 + y, y0 - x));
+                Tiles.Add(new Point(x0 + x, y0 - y));
+
+                if (err <= 0)
+                {
+                    y++;
+                    err += dy;
+                    dy += 2;
+                }
+
+                if (err > 0)
+                {
+                    x--;                    
+                    dx += 2;
+                    err += dx - (radius << 1);
+                }
+
+            }
+
+            foreach (var item in Tiles)
+            {
+                if (!TileCircle.Contains(item))
+                {
+                    TileCircle.Add(item);
+
+                }
+            }            
+            TileCircleSize = radius;
+        }
     }
 }
